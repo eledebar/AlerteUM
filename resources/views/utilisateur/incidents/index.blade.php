@@ -10,16 +10,23 @@
             + Nouvel incident
         </a>
 
-        <!-- Filtro par statut -->
-        <form method="GET" class="mb-6">
-            <label for="statut" class="mr-2 font-medium">Filtrer par statut:</label>
-            <select name="statut" id="statut" onchange="this.form.submit()" class="border px-3 py-1">
-                <option value="">-- Tous --</option>
-                <option value="nouveau" {{ request('statut') == 'nouveau' ? 'selected' : '' }}>Nouveau</option>
-                <option value="en_cours" {{ request('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
-                <option value="résolu" {{ request('statut') == 'résolu' ? 'selected' : '' }}>Résolu</option>
-            </select>
+        <!-- Filtro por statut -->
+        <form method="GET" class="mb-6 flex items-center space-x-4">
+            <div>
+                <label for="statut" class="mr-2 font-medium">Filtrer par statut:</label>
+                <select name="statut" id="statut" onchange="this.form.submit()" class="border px-3 py-1">
+                    <option value="">-- Tous --</option>
+                    <option value="nouveau" {{ request('statut') == 'nouveau' ? 'selected' : '' }}>Nouveau</option>
+                    <option value="en_cours" {{ request('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
+                    <option value="résolu" {{ request('statut') == 'résolu' ? 'selected' : '' }}>Résolu</option>
+                </select>
+            </div>
         </form>
+
+        <!-- Filtro en vivo -->
+        <div class="mb-6">
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher par titre ou statut..." class="w-full px-4 py-2 border rounded">
+        </div>
 
         @if (session('success'))
             <div class="mb-4 text-green-600">
@@ -27,7 +34,7 @@
             </div>
         @endif
 
-        <table class="min-w-full bg-white shadow-md rounded">
+        <table class="min-w-full bg-white shadow-md rounded" id="incidentTable">
             <thead>
                 <tr>
                     <th class="px-6 py-3 text-left font-bold">Titre</th>
@@ -38,14 +45,13 @@
             <tbody>
                 @forelse ($incidents as $incident)
                     <tr class="border-b">
-                        <td class="px-6 py-4">{{ $incident->titre }}</td>
-                        <td class="px-6 py-4 capitalize">{{ $incident->statut }}</td>
+                        <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
+                        <td class="px-6 py-4 capitalize incident-statut">{{ $incident->statut }}</td>
                         <td class="px-6 py-4 space-x-2">
                             <a href="{{ route('utilisateur.incidents.show', $incident) }}" class="text-gray-700">👁️ Voir</a>
 
                             @if($incident->statut === 'nouveau')
                                 <a href="{{ route('utilisateur.incidents.edit', $incident) }}" class="text-blue-500">✏️ Modifier</a>
-
                                 <form action="{{ route('utilisateur.incidents.destroy', $incident) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet incident ?')">
                                     @csrf
                                     @method('DELETE')
@@ -66,4 +72,22 @@
             {{ $incidents->appends(['statut' => request('statut')])->links() }}
         </div>
     </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#incidentTable tbody tr');
+
+            rows.forEach(row => {
+                const title = row.querySelector('.incident-title').textContent.toLowerCase();
+                const statut = row.querySelector('.incident-statut').textContent.toLowerCase();
+
+                if (title.includes(searchValue) || statut.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </x-app-layout>
