@@ -5,56 +5,69 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
 use App\Models\User;
+use App\Models\IncidentComment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IncidentController extends Controller
 {
-    // Mostrar todas las incidencias con nombre del usuario
-    public function index()
-    {
-        $incidents = Incident::latest()->with('utilisateur')->paginate(10);
-        return view('admin.incidents.index', compact('incidents'));
+   public function index(Request $request)
+{
+    $query = Incident::with('utilisateur')->latest();
+
+    if ($request->filled('statut')) {
+        $query->where('statut', $request->statut);
     }
 
-    // Mostrar formulario de creación
+    $incidents = $query->paginate(10);
+
+    return view('admin.incidents.index', compact('incidents'));
+}
+
+
     public function create()
     {
-        $users = User::where('role', 'utilisateur')->get(); // Solo usuarios normales
+        $users = User::where('role', 'utilisateur')->get();
         return view('admin.incidents.create', compact('users'));
     }
 
-    // Guardar nueva incidencia
     public function store(Request $request)
     {
         $request->validate([
-            'titre' => 'required',
-            'description' => 'required',
+            'titre' => 'required|string',
+            'description' => 'required|string',
             'utilisateur_id' => 'required|exists:users,id',
         ]);
 
         Incident::create([
             'titre' => $request->titre,
             'description' => $request->description,
-            'statut' => 'nouveau', // Siempre empieza como "nouveau"
+            'statut' => 'nouveau',
             'utilisateur_id' => $request->utilisateur_id,
         ]);
 
         return redirect()->route('admin.incidents.index')->with('success', 'Incident créé avec succès.');
     }
 
-    // Mostrar formulario de edición
+    public function show(Incident $incident)
+    {
+        $incident->load(['utilisateur', 'commentaires.auteur']);
+        return view('admin.incidents.show', compact('incident'));
+    }
+
     public function edit(Incident $incident)
     {
+        $incident->load('commentaires.auteur');
         return view('admin.incidents.edit', compact('incident'));
     }
 
-    // Actualizar incidencia
     public function update(Request $request, Incident $incident)
     {
         $request->validate([
-            'titre' => 'required',
-            'description' => 'required',
+            'titre' => 'required|string',
+            'description' => 'required|string',
             'statut' => 'required|in:nouveau,en_cours,résolu',
+            'commentaire' => 'nullable|string',
         ]);
 
         $incident->update([
@@ -63,14 +76,20 @@ class IncidentController extends Controller
             'statut' => $request->statut,
         ]);
 
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour.');
+        if ($request->filled('commentaire')) {
+            IncidentComment::create([
+                'incident_id' => $incident->id,
+                'user_id' => Auth::id(),
+                'commentaire' => $request->commentaire,
+            ]);
+        }
+
+        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
     }
 
-    // Eliminar incidencia
     public function destroy(Incident $incident)
     {
         $incident->delete();
-
         return redirect()->route('admin.incidents.index')->with('success', 'Incident supprimé.');
     }
 }

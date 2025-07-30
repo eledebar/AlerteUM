@@ -28,4 +28,10 @@ class Incident extends Model
     {
         return $this->belongsTo(User::class, 'attribué_à');
     }
+
+    public function commentaires()
+{
+    return $this->hasMany(IncidentComment::class);
+}
+
 }

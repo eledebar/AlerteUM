@@ -27,6 +27,26 @@
                 </select>
             </div>
 
+            <div class="mb-4">
+                <label class="block font-medium">Commentaire (optionnel)</label>
+                <textarea name="commentaire" class="w-full border px-4 py-2" rows="4"></textarea>
+            </div>
+
+            @if ($incident->commentaires->count())
+                <div class="mb-6">
+                    <h3 class="font-bold mb-2">Commentaires précédents :</h3>
+                    <ul class="list-disc pl-5 text-sm text-gray-700">
+                        @foreach ($incident->commentaires as $commentaire)
+                            <li>
+                                <strong>{{ $commentaire->auteur->name }}:</strong>
+                                {{ $commentaire->commentaire }}
+                                <em class="text-gray-500 text-xs">({{ $commentaire->created_at->format('d/m/Y H:i') }})</em>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enregistrer</button>
         </form>
     </div>

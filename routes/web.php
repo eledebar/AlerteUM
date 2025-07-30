@@ -23,6 +23,8 @@ Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('ut
     Route::get('/incidents/{incident}/edit', [IncidentController::class, 'edit'])->name('incidents.edit');
     Route::put('/incidents/{incident}', [IncidentController::class, 'update'])->name('incidents.update');
     Route::delete('/incidents/{incident}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
+    Route::get('/incidents/{incident}', [IncidentController::class, 'show'])->name('incidents.show');
+
 });
 
 // Rutas de admin
