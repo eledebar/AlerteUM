@@ -1,3 +1,5 @@
+{{-- resources/views/utilisateur/incidents/edit.blade.php --}}
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -20,14 +22,17 @@
                 <textarea name="description" class="w-full border px-4 py-2" rows="5" required>{{ $incident->description }}</textarea>
             </div>
 
-            <div class="mb-4">
-                <label class="block font-medium">Statut</label>
-                <select name="statut" class="w-full border px-4 py-2" required>
-                    <option value="nouveau" @selected($incident->statut == 'nouveau')>Nouveau</option>
-                    <option value="en_cours" @selected($incident->statut == 'en_cours')>En cours</option>
-                    <option value="résolu" @selected($incident->statut == 'résolu')>Résolu</option>
-                </select>
-            </div>
+            {{-- SOLO si es ADMIN se muestra el campo de statut --}}
+            @if (auth()->user()->estAdmin())
+                <div class="mb-4">
+                    <label class="block font-medium">Statut</label>
+                    <select name="statut" class="w-full border px-4 py-2" required>
+                        <option value="nouveau" @selected($incident->statut == 'nouveau')>Nouveau</option>
+                        <option value="en_cours" @selected($incident->statut == 'en_cours')>En cours</option>
+                        <option value="résolu" @selected($incident->statut == 'résolu')>Résolu</option>
+                    </select>
+                </div>
+            @endif
 
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enregistrer</button>
         </form>

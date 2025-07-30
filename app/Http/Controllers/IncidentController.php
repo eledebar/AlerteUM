@@ -57,19 +57,23 @@ class IncidentController extends Controller
     }
 
     // Mise à jour de l’incident
-    public function update(Request $request, Incident $incident)
-    {
-        $request->validate([
-            'titre' => 'required',
-            'description' => 'required',
-            'statut' => 'required',
-        ]);
+   public function update(Request $request, Incident $incident)
+{
+    $request->validate([
+        'titre' => 'required',
+        'description' => 'required',
+    ]);
 
-        $incident->update($request->all());
+    // Solo actualizamos le titre y la description, nunca el statut aquí
+    $incident->update([
+        'titre' => $request->titre,
+        'description' => $request->description,
+    ]);
 
-        return redirect()->route('utilisateur.incidents.index')
-                         ->with('success', 'Incident mis à jour.');
-    }
+    return redirect()->route('utilisateur.incidents.index')
+                     ->with('success', 'Incident mis à jour.');
+}
+
 
     // Suppression
     public function destroy(Incident $incident)
