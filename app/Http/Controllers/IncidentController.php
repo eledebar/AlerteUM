@@ -8,10 +8,19 @@ use Illuminate\Support\Facades\Auth;
 
 class IncidentController extends Controller
 {
-    // Liste des incidents
+    // Liste des incidents (filtrée par utilisateur sauf admin/gestionnaire)
     public function index()
     {
-        $incidents = Incident::latest()->paginate(10);
+        $user = Auth::user();
+
+        if ($user->estAdminOuGestionnaire()) {
+            $incidents = Incident::latest()->paginate(10);
+        } else {
+            $incidents = Incident::where('utilisateur_id', $user->id)
+                                 ->latest()
+                                 ->paginate(10);
+        }
+
         return view('utilisateur.incidents.index', compact('incidents'));
     }
 
@@ -21,26 +30,27 @@ class IncidentController extends Controller
         return view('utilisateur.incidents.create');
     }
 
-    // Stockage d’un nouvel incident
+    // Enregistrement d’un incident
     public function store(Request $request)
     {
         $request->validate([
             'titre' => 'required',
             'description' => 'required',
-            'statut' => 'required',
+            // NO pedimos 'statut' porque lo forzamos a 'nouveau'
         ]);
 
         Incident::create([
             'titre' => $request->titre,
             'description' => $request->description,
-            'statut' => $request->statut,
+            'statut' => 'nouveau', // Se establece por defecto
             'utilisateur_id' => Auth::id(),
         ]);
 
-        return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident créé avec succès.');
+        return redirect()->route('utilisateur.incidents.index')
+                         ->with('success', 'Incident créé avec succès.');
     }
 
-    // Formulaire d’édition
+    // Formulaire de modification
     public function edit(Incident $incident)
     {
         return view('utilisateur.incidents.edit', compact('incident'));
@@ -57,7 +67,8 @@ class IncidentController extends Controller
 
         $incident->update($request->all());
 
-        return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident mis à jour.');
+        return redirect()->route('utilisateur.incidents.index')
+                         ->with('success', 'Incident mis à jour.');
     }
 
     // Suppression
@@ -65,6 +76,7 @@ class IncidentController extends Controller
     {
         $incident->delete();
 
-        return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident supprimé.');
+        return redirect()->route('utilisateur.incidents.index')
+                         ->with('success', 'Incident supprimé.');
     }
 }

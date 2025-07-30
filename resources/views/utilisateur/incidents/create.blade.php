@@ -19,16 +19,11 @@
                 <textarea name="description" class="w-full border px-4 py-2" rows="5" required></textarea>
             </div>
 
-            <div class="mb-4">
-                <label class="block font-medium">Statut</label>
-                <select name="statut" class="w-full border px-4 py-2" required>
-                    <option value="nouveau">Nouveau</option>
-                    <option value="en_cours">En cours</option>
-                    <option value="résolu">Résolu</option>
-                </select>
-            </div>
+            {{-- No hay campo para "statut", lo pondremos en el controlador automáticamente como "nouveau" --}}
 
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Créer</button>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">
+                Créer
+            </button>
         </form>
     </div>
 </x-app-layout>
