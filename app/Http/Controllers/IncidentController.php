@@ -54,6 +54,9 @@ class IncidentController extends Controller
             'utilisateur_id' => Auth::id(),
         ]);
 
+        // Charger l'utilisateur pour la notification
+        $incident->load('utilisateur');
+
         // Notifier tous les administrateurs
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
@@ -127,9 +130,8 @@ class IncidentController extends Controller
             abort(403, 'Accès non autorisé.');
         }
 
-        $incident->load('commentaires.auteur');
+        $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
 
-        // Afficher la vue correspondante
         if ($user->estAdmin()) {
             return view('admin.incidents.show', compact('incident'));
         }

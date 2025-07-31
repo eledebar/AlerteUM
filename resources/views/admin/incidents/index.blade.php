@@ -10,7 +10,7 @@
             + Nouvel incident
         </a>
 
-        <form method="GET" class="mb-6 flex items-center space-x-4">
+        <form method="GET" class="mb-6 flex flex-wrap items-center gap-4">
             <div>
                 <label for="statut" class="mr-2 font-medium text-gray-800 dark:text-gray-200">Filtrer par statut:</label>
                 <select name="statut" id="statut" onchange="this.form.submit()"
@@ -20,6 +20,13 @@
                     <option value="en_cours" {{ request('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
                     <option value="résolu" {{ request('statut') == 'résolu' ? 'selected' : '' }}>Résolu</option>
                 </select>
+            </div>
+
+            <div>
+                <label for="assigne_a_moi" class="mr-2 font-medium text-gray-800 dark:text-gray-200">Mes incidents assignés:</label>
+                <input type="checkbox" name="assigne_a_moi" id="assigne_a_moi" value="1"
+                       onchange="this.form.submit()"
+                       {{ request()->boolean('assigne_a_moi') ? 'checked' : '' }}>
             </div>
         </form>
 
@@ -40,6 +47,7 @@
                     <th class="px-6 py-3 text-left font-bold">Titre</th>
                     <th class="px-6 py-3 text-left font-bold">Statut</th>
                     <th class="px-6 py-3 text-left font-bold">Créé par</th>
+                    <th class="px-6 py-3 text-left font-bold">Assigné à</th>
                     <th class="px-6 py-3 text-left font-bold">Actions</th>
                 </tr>
             </thead>
@@ -49,6 +57,7 @@
                         <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
                         <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
                         <td class="px-6 py-4 incident-user">{{ $incident->utilisateur?->name ?? '—' }}</td>
+                        <td class="px-6 py-4 incident-gestionnaire">{{ $incident->gestionnaire?->name ?? '—' }}</td>
                         <td class="px-6 py-4 flex flex-wrap gap-2">
                             <a href="{{ route('admin.incidents.show', $incident) }}"
                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 rounded transition">
@@ -70,14 +79,14 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
 
         <div class="mt-6">
-            {{ $incidents->appends(['statut' => request('statut')])->links() }}
+            {{ $incidents->appends(request()->only('statut', 'assigne_a_moi'))->links() }}
         </div>
     </div>
 
@@ -87,11 +96,17 @@
             const rows = document.querySelectorAll('#incidentTable tbody tr');
 
             rows.forEach(row => {
-                const title = row.querySelector('.incident-title').textContent.toLowerCase();
-                const statut = row.querySelector('.incident-statut').textContent.toLowerCase();
+                const title = row.querySelector('.incident-title')?.textContent.toLowerCase() || '';
+                const statut = row.querySelector('.incident-statut')?.textContent.toLowerCase() || '';
                 const user = row.querySelector('.incident-user')?.textContent.toLowerCase() || '';
+                const gestionnaire = row.querySelector('.incident-gestionnaire')?.textContent.toLowerCase() || '';
 
-                row.style.display = (title.includes(searchValue) || statut.includes(searchValue) || user.includes(searchValue)) ? '' : 'none';
+                row.style.display = (
+                    title.includes(searchValue) ||
+                    statut.includes(searchValue) ||
+                    user.includes(searchValue) ||
+                    gestionnaire.includes(searchValue)
+                ) ? '' : 'none';
             });
         });
     </script>

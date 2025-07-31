@@ -13,7 +13,7 @@
             <!-- Navegación central -->
             <div class="hidden sm:flex space-x-8">
                 <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                    {{ __('Dashboard') }}
+                    {{ __('Tableau de bord') }}
                 </x-nav-link>
                 @auth
                     @if(auth()->user()->estAdmin())

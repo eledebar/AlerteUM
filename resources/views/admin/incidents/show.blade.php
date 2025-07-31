@@ -27,6 +27,11 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 p-6 rounded shadow">
+            <h3 class="text-lg font-bold mb-2 text-gray-800 dark:text-white">Assigné à</h3>
+            <p class="text-gray-900 dark:text-gray-100">{{ $incident->gestionnaire->name ?? '—' }}</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded shadow">
             <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white">Commentaires</h3>
 
             @if ($incident->commentaires->isEmpty())

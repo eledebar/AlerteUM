@@ -9,33 +9,55 @@ use App\Models\Incident;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
+        $filtreAssigne = $request->query('assigned') === 'me';
+
         if ($user->estAdmin()) {
-            $total = Incident::count();
-            $pendientes = Incident::where('statut', 'nouveau')->count();
-            $resueltas = Incident::where('statut', 'résolu')->count();
-            $enProceso = Incident::where('statut', 'en_cours')->count();
-            $porTipo = Incident::select('titre', DB::raw('count(*) as total'))
-                ->groupBy('titre')
-                ->get();
-        } elseif ($user->estUtilisateur()) {
-            $total = $user->incidents()->count();
-            $pendientes = $user->incidents()->where('statut', 'nouveau')->count();
-            $resueltas = $user->incidents()->where('statut', 'résolu')->count();
-            $enProceso = $user->incidents()->where('statut', 'en_cours')->count();
-            $porTipo = $user->incidents()
+            $queryBase = Incident::query();
+
+            if ($filtreAssigne) {
+                $queryBase->where('attribue_a', $user->id);
+            }
+
+            // Conteos individuales por statut
+            $pendientes = (clone $queryBase)->where('statut', 'nouveau')->count();
+            $enProceso  = (clone $queryBase)->where('statut', 'en_cours')->count();
+            $resueltas  = (clone $queryBase)->where('statut', 'résolu')->count();
+
+            $porTipo = (clone $queryBase)
                 ->select('titre', DB::raw('count(*) as total'))
                 ->groupBy('titre')
                 ->get();
+
+            $total = $pendientes + $enProceso + $resueltas;
+
+        } elseif ($user->estUtilisateur()) {
+            $queryBase = $user->incidents();
+
+            $pendientes = (clone $queryBase)->where('statut', 'nouveau')->count();
+            $enProceso  = (clone $queryBase)->where('statut', 'en_cours')->count();
+            $resueltas  = (clone $queryBase)->where('statut', 'résolu')->count();
+
+            $porTipo = (clone $queryBase)
+                ->select('titre', DB::raw('count(*) as total'))
+                ->groupBy('titre')
+                ->get();
+
+            $total = $pendientes + $enProceso + $resueltas;
+
         } else {
-            abort(403, 'Rol non autorisé.');
+            abort(403, 'Rôle non autorisé.');
         }
 
-        return view('dashboard', compact(
-            'total', 'pendientes', 'resueltas', 'enProceso', 'porTipo'
-        ));
+        return view('dashboard', [
+            'pendientes' => $pendientes,
+            'enProceso' => $enProceso,
+            'resueltas' => $resueltas,
+            'total' => $total,
+            'porTipo' => $porTipo
+        ]);
     }
 }

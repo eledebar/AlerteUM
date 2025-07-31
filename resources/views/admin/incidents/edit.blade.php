@@ -1,6 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white leading-tight">Modifier l'incident</h2>
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white leading-tight">
+            Modifier l'incident
+        </h2>
     </x-slot>
 
     <div class="py-8 max-w-4xl mx-auto sm:px-6 lg:px-8">
@@ -11,7 +13,7 @@
             <div class="mb-4">
                 <label class="block font-medium text-gray-800 dark:text-gray-200">Titre</label>
                 <input type="text" name="titre" id="titre"
-                       value="{{ $incident->titre }}"
+                       value="{{ old('titre', $incident->titre) }}"
                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded"
                        required>
             </div>
@@ -20,7 +22,7 @@
                 <label class="block font-medium text-gray-800 dark:text-gray-200">Description</label>
                 <textarea name="description" id="description"
                           class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded"
-                          rows="5" required>{{ $incident->description }}</textarea>
+                          rows="5" required>{{ old('description', $incident->description) }}</textarea>
             </div>
 
             <div class="mb-4">
@@ -30,6 +32,19 @@
                     <option value="nouveau" @selected($incident->statut == 'nouveau')>Nouveau</option>
                     <option value="en_cours" @selected($incident->statut == 'en_cours')>En cours</option>
                     <option value="résolu" @selected($incident->statut == 'résolu')>Résolu</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-medium text-gray-800 dark:text-gray-200">Assigner à</label>
+                <select name="attribue_a"
+                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded">
+                    <option value="">— Aucun —</option>
+                    @foreach($admins as $admin)
+                        <option value="{{ $admin->id }}" @selected($incident->attribue_a == $admin->id)>
+                            {{ $admin->name }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
@@ -61,39 +76,11 @@
                     ← Retour
                 </a>
 
-                <button type="submit" id="saveBtn"
-                        class="bg-green-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed"
-                        disabled>
+                <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
                     Enregistrer
                 </button>
             </div>
         </form>
     </div>
-
-    <script>
-        const form = document.getElementById('adminIncidentForm');
-        const saveBtn = document.getElementById('saveBtn');
-
-        const originalData = {
-            titre: document.getElementById('titre').value,
-            description: document.getElementById('description').value,
-            statut: document.getElementById('statut').value,
-        };
-
-        form.addEventListener('input', () => {
-            const titre = document.getElementById('titre').value;
-            const description = document.getElementById('description').value;
-            const statut = document.getElementById('statut').value;
-            const commentaire = document.getElementById('commentaire').value.trim();
-
-            const hasChanges = titre !== originalData.titre ||
-                               description !== originalData.description ||
-                               statut !== originalData.statut ||
-                               commentaire.length > 0;
-
-            saveBtn.disabled = !hasChanges;
-            saveBtn.classList.toggle('opacity-50', !hasChanges);
-            saveBtn.classList.toggle('cursor-not-allowed', !hasChanges);
-        });
-    </script>
 </x-app-layout>

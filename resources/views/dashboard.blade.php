@@ -8,6 +8,18 @@
     <div class="py-12 bg-gray-50 dark:bg-gray-900">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-10">
 
+            {{-- Filtros --}}
+            @if (Auth::user()->estAdmin())
+                <form method="GET" class="mb-6 flex flex-wrap gap-4 items-center">
+                    <label for="assigned" class="font-medium text-gray-800 dark:text-white">Filtrer:</label>
+                    <select name="assigned" id="assigned" onchange="this.form.submit()"
+                            class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded">
+                        <option value="">Tous les incidents</option>
+                        <option value="me" {{ request('assigned') == 'me' ? 'selected' : '' }}>Assignés à moi</option>
+                    </select>
+                </form>
+            @endif
+
             {{-- Résumé numérique --}}
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Résumé des incidents</h3>
@@ -51,7 +63,6 @@
         const labels = ['Nouveaux', 'En cours', 'Résolus'];
         const values = [{{ $pendientes }}, {{ $enProceso }}, {{ $resueltas }}];
 
-        // Bar Chart
         new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
@@ -86,7 +97,6 @@
             }
         });
 
-        // Pie Chart
         new Chart(document.getElementById('pieChart'), {
             type: 'pie',
             data: {
