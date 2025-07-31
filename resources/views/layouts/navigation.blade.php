@@ -6,7 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <img src="{{ asset('logo-um.png') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
+                        <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
                     </a>
                 </div>
 
@@ -76,4 +76,3 @@
     </div>
 </nav>
 
-{{-- <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}"> --}}
