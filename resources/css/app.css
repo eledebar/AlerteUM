@@ -5,3 +5,7 @@
 [x-cloak] {
     display: none !important;
 }
+
+html {
+    background-color: #111827;
+}

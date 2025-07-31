@@ -24,7 +24,7 @@
         </form>
 
         <div class="mb-6">
-            <input type="text" id="searchInput" placeholder="🔍 Rechercher par titre ou statut..."
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher par titre, statut ou utilisateur..."
                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded">
         </div>
 
@@ -47,34 +47,22 @@
                 @forelse ($incidents as $incident)
                     <tr class="border-b border-gray-200 dark:border-gray-700">
                         <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
-                        <td class="px-6 py-4 capitalize incident-statut">{{ $incident->statut }}</td>
-                        <td class="px-6 py-4">{{ $incident->utilisateur?->name ?? '—' }}</td>
+                        <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
+                        <td class="px-6 py-4 incident-user">{{ $incident->utilisateur?->name ?? '—' }}</td>
                         <td class="px-6 py-4 flex flex-wrap gap-2">
                             <a href="{{ route('admin.incidents.show', $incident) }}"
                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 rounded transition">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
-                                </svg>
                                 Voir
                             </a>
-
                             <a href="{{ route('admin.incidents.edit', $incident) }}"
                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 rounded transition">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5M18.5 2.5l3 3L12 15l-4 1 1-4 8.5-8.5z" />
-                                </svg>
                                 Modifier
                             </a>
-
                             <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet incident ?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
                                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 rounded transition">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
                                     Supprimer
                                 </button>
                             </form>
@@ -101,8 +89,9 @@
             rows.forEach(row => {
                 const title = row.querySelector('.incident-title').textContent.toLowerCase();
                 const statut = row.querySelector('.incident-statut').textContent.toLowerCase();
+                const user = row.querySelector('.incident-user')?.textContent.toLowerCase() || '';
 
-                row.style.display = (title.includes(searchValue) || statut.includes(searchValue)) ? '' : 'none';
+                row.style.display = (title.includes(searchValue) || statut.includes(searchValue) || user.includes(searchValue)) ? '' : 'none';
             });
         });
     </script>
