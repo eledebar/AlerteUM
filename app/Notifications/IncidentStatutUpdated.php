@@ -5,7 +5,9 @@ namespace App\Notifications;
 use App\Models\Incident;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\DatabaseMessage;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class IncidentStatutUpdated extends Notification
 {
@@ -20,14 +22,25 @@ class IncidentStatutUpdated extends Notification
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database', 'mail']; // Añadimos mail
     }
 
     public function toDatabase($notifiable)
     {
-        return new DatabaseMessage([
-            'message' => 'Le statut de votre incident "' . $this->incident->titre . '" a été mis à jour: ' . $this->incident->statut,
+        return [
+            'message' => 'Le statut de votre incident "' . $this->incident->titre . '" a été mis à jour à: ' . $this->incident->statut,
             'url' => route('utilisateur.incidents.show', $this->incident->id),
-        ]);
+        ];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Statut de votre incident mis à jour')
+            ->greeting('Bonjour ' . $notifiable->name . ',')
+            ->line('Le statut de votre incident "' . $this->incident->titre . '" a été changé.')
+            ->line('Nouveau statut: ' . $this->incident->statut)
+            ->action('Voir l\'incident', route('utilisateur.incidents.show', $this->incident->id))
+            ->line('Merci de votre patience.');
     }
 }
