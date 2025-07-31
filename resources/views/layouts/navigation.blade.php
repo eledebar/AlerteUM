@@ -1,8 +1,8 @@
-<nav class="bg-white border-b border-gray-100">
+<nav class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <div class="flex">
+            <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
@@ -12,17 +12,17 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-gray-900 dark:hover:text-gray-200">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
                     @auth
                         @if(auth()->user()->estAdmin())
-                            <x-nav-link :href="route('admin.incidents.index')" :active="request()->routeIs('admin.incidents.*')">
+                            <x-nav-link :href="route('admin.incidents.index')" :active="request()->routeIs('admin.incidents.*')" class="text-gray-800 dark:text-white hover:text-gray-900 dark:hover:text-gray-200">
                                 {{ __('Incidents') }}
                             </x-nav-link>
                         @elseif(auth()->user()->estUtilisateur())
-                            <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.*')">
+                            <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.*')" class="text-gray-800 dark:text-white hover:text-gray-900 dark:hover:text-gray-200">
                                 {{ __('Mes Incidents') }}
                             </x-nav-link>
                         @endif
@@ -38,7 +38,8 @@
                     @endphp
 
                     <div class="mr-4">
-                        <a href="{{ route($prefix . 'notifications.index') }}" class="relative inline-block text-gray-600 hover:text-gray-900">
+                        <a href="{{ route($prefix . 'notifications.index') }}"
+                           class="relative inline-block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                             🔔
                             @if(auth()->user()->unreadNotifications()->count() > 0)
                                 <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
@@ -50,10 +51,10 @@
                 <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="flex items-center font-medium text-sm text-gray-500 hover:text-gray-700">
+                        <button class="flex items-center font-medium text-sm text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">
                             {{ Auth::user()->name }}
                             <div class="ml-1">
-                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                                <svg class="fill-current h-4 w-4 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20">
                                     <path d="M5.293 7.293L10 12l4.707-4.707-1.414-1.414L10 9.172 6.707 5.879 5.293 7.293z" />
                                 </svg>
                             </div>
@@ -75,4 +76,3 @@
         </div>
     </div>
 </nav>
-

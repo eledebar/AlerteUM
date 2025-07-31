@@ -9,12 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-
 class IncidentController extends Controller
 {
     use AuthorizesRequests;
 
-    // Lista de incidencias del usuario conectado
+    // Liste des incidents de l'utilisateur connecté
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -34,57 +33,58 @@ class IncidentController extends Controller
         return view('utilisateur.incidents.index', compact('incidents'));
     }
 
-    // Formulario de creación
+    // Formulaire de création
     public function create()
     {
         return view('utilisateur.incidents.create');
     }
 
-    // Guardar una nueva incidencia y notificar a los admins
+    // Enregistrer un nouvel incident et notifier les admins
     public function store(Request $request)
-{
-    $request->validate([
-        'titre' => 'required',
-        'description' => 'required',
-    ]);
+    {
+        $request->validate([
+            'titre' => 'required',
+            'description' => 'required',
+        ]);
 
-    $incident = Incident::create([
-        'titre' => $request->titre,
-        'description' => $request->description,
-        'statut' => 'nouveau',
-        'utilisateur_id' => Auth::id(),
-    ]);
+        $incident = Incident::create([
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'statut' => 'nouveau',
+            'utilisateur_id' => Auth::id(),
+        ]);
 
-    // Notificar a todos los administradores
-    $admins = User::where('role', 'admin')->get();
-    foreach ($admins as $admin) {
-        $admin->notify(new NouvelleIncidentCree($incident));
+        // Notifier tous les administrateurs
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NouvelleIncidentCree($incident));
+        }
+
+        return redirect()->route('utilisateur.incidents.index')
+            ->with('success', 'Incident créé avec succès.');
     }
 
-    return redirect()->route('utilisateur.incidents.index')
-        ->with('success', 'Incident créé avec succès.');
-}
-    // Formulario de edición
+    // Formulaire d’édition
     public function edit(Incident $incident)
     {
         $this->authorize('update', $incident);
 
         if ($incident->statut !== 'nouveau') {
             return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'No se puede modificar una incidencia ya tratada.');
+                ->with('error', 'Impossible de modifier un incident déjà traité.');
         }
 
         return view('utilisateur.incidents.edit', compact('incident'));
     }
 
-    // Actualizar una incidencia
+    // Mettre à jour un incident
     public function update(Request $request, Incident $incident)
     {
         $this->authorize('update', $incident);
 
         if ($incident->statut !== 'nouveau') {
             return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'No se puede actualizar una incidencia ya tratada.');
+                ->with('error', 'Impossible de mettre à jour un incident déjà traité.');
         }
 
         $request->validate([
@@ -98,38 +98,38 @@ class IncidentController extends Controller
         ]);
 
         return redirect()->route('utilisateur.incidents.index')
-            ->with('success', 'Incidencia actualizada.');
+            ->with('success', 'Incident mis à jour avec succès.');
     }
 
-    // Eliminar
+    // Supprimer
     public function destroy(Incident $incident)
     {
         $this->authorize('delete', $incident);
 
         if ($incident->statut !== 'nouveau') {
             return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'No se puede eliminar una incidencia ya tratada.');
+                ->with('error', 'Impossible de supprimer un incident déjà traité.');
         }
 
         $incident->delete();
 
         return redirect()->route('utilisateur.incidents.index')
-            ->with('success', 'Incidencia eliminada.');
+            ->with('success', 'Incident supprimé avec succès.');
     }
 
-    // Mostrar detalle (usuario o admin)
+    // Afficher les détails (utilisateur ou admin)
     public function show(Incident $incident)
     {
         $user = Auth::user();
 
-        // Permitir solo si es admin o dueño
+        // Autorisé seulement si admin ou propriétaire
         if (!$user->estAdmin() && $incident->utilisateur_id !== $user->id) {
-            abort(403, 'Acceso no autorizado.');
+            abort(403, 'Accès non autorisé.');
         }
 
         $incident->load('commentaires.auteur');
 
-        // Mostrar la vista correspondiente
+        // Afficher la vue correspondante
         if ($user->estAdmin()) {
             return view('admin.incidents.show', compact('incident'));
         }

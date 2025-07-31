@@ -1,42 +1,43 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
+        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-100">
             {{ __('Tableau de bord') }}
         </h2>
     </x-slot>
 
-    <div class="py-12 bg-gray-50">
+    <div class="py-12 bg-gray-50 dark:bg-gray-900">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-10">
+
             {{-- Résumé numérique --}}
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Résumé des incidents</h3>
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Résumé des incidents</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                    <div class="bg-yellow-100 p-4 rounded shadow">
-                        <p class="text-sm text-gray-600">Nouveaux</p>
-                        <p class="text-2xl font-semibold text-yellow-800">{{ $pendientes }}</p>
+                    <div class="bg-yellow-100 dark:bg-yellow-300/20 p-4 rounded shadow">
+                        <p class="text-sm text-gray-600 dark:text-yellow-200">Nouveaux</p>
+                        <p class="text-2xl font-semibold text-yellow-800 dark:text-yellow-400">{{ $pendientes }}</p>
                     </div>
-                    <div class="bg-blue-100 p-4 rounded shadow">
-                        <p class="text-sm text-gray-600">En cours</p>
-                        <p class="text-2xl font-semibold text-blue-800">{{ $enProceso }}</p>
+                    <div class="bg-blue-100 dark:bg-blue-300/20 p-4 rounded shadow">
+                        <p class="text-sm text-gray-600 dark:text-blue-200">En cours</p>
+                        <p class="text-2xl font-semibold text-blue-800 dark:text-blue-400">{{ $enProceso }}</p>
                     </div>
-                    <div class="bg-green-100 p-4 rounded shadow">
-                        <p class="text-sm text-gray-600">Résolus</p>
-                        <p class="text-2xl font-semibold text-green-800">{{ $resueltas }}</p>
+                    <div class="bg-green-100 dark:bg-green-300/20 p-4 rounded shadow">
+                        <p class="text-sm text-gray-600 dark:text-green-200">Résolus</p>
+                        <p class="text-2xl font-semibold text-green-800 dark:text-green-400">{{ $resueltas }}</p>
                     </div>
                 </div>
             </div>
 
             {{-- Graphique en barres --}}
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Incidents par statut</h3>
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Incidents par statut</h3>
                 <div class="max-w-2xl mx-auto">
                     <canvas id="barChart" width="400" height="300"></canvas>
                 </div>
             </div>
 
             {{-- Graphique circulaire --}}
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Répartition des incidents</h3>
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Répartition des incidents</h3>
                 <div class="max-w-2xl mx-auto">
                     <canvas id="pieChart" width="400" height="300"></canvas>
                 </div>

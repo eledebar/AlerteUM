@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
             Nouvel incident
         </h2>
     </x-slot>
@@ -10,18 +10,16 @@
             @csrf
 
             <div class="mb-4">
-                <label class="block font-medium">Titre</label>
-                <input type="text" name="titre" class="w-full border px-4 py-2" required>
+                <label class="block font-medium text-gray-800 dark:text-gray-200">Titre</label>
+                <input type="text" name="titre" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded" required>
             </div>
 
             <div class="mb-4">
-                <label class="block font-medium">Description</label>
-                <textarea name="description" class="w-full border px-4 py-2" rows="5" required></textarea>
+                <label class="block font-medium text-gray-800 dark:text-gray-200">Description</label>
+                <textarea name="description" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded" rows="5" required></textarea>
             </div>
 
-            {{-- No hay campo para "statut", lo pondremos en el controlador automáticamente como "nouveau" --}}
-
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
                 Créer
             </button>
         </form>
