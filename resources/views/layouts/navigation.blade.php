@@ -30,13 +30,28 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
+            <!-- Settings + Notifications -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
+                @auth
+                    @php
+                        $prefix = auth()->user()->estAdmin() ? 'admin.' : 'utilisateur.';
+                    @endphp
+
+                    <div class="mr-4">
+                        <a href="{{ route($prefix . 'notifications.index') }}" class="relative inline-block text-gray-600 hover:text-gray-900">
+                            🔔
+                            @if(auth()->user()->unreadNotifications()->count() > 0)
+                                <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+                            @endif
+                        </a>
+                    </div>
+                @endauth
+
+                <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="flex items-center font-medium text-sm text-gray-500 hover:text-gray-700">
                             {{ Auth::user()->name }}
-
                             <div class="ml-1">
                                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
                                     <path d="M5.293 7.293L10 12l4.707-4.707-1.414-1.414L10 9.172 6.707 5.879 5.293 7.293z" />

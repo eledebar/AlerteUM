@@ -8,22 +8,22 @@ use App\Models\User;
 use App\Models\IncidentComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\IncidentStatutUpdated;
 
 class IncidentController extends Controller
 {
-   public function index(Request $request)
-{
-    $query = Incident::with('utilisateur')->latest();
+    public function index(Request $request)
+    {
+        $query = Incident::with('utilisateur')->latest();
 
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        $incidents = $query->paginate(10);
+
+        return view('admin.incidents.index', compact('incidents'));
     }
-
-    $incidents = $query->paginate(10);
-
-    return view('admin.incidents.index', compact('incidents'));
-}
-
 
     public function create()
     {
@@ -57,35 +57,44 @@ class IncidentController extends Controller
 
     public function edit(Incident $incident)
     {
-        $incident->load('commentaires.auteur');
+        $incident->load(['utilisateur', 'commentaires.auteur']);
         return view('admin.incidents.edit', compact('incident'));
     }
 
     public function update(Request $request, Incident $incident)
-    {
-        $request->validate([
-            'titre' => 'required|string',
-            'description' => 'required|string',
-            'statut' => 'required|in:nouveau,en_cours,résolu',
-            'commentaire' => 'nullable|string',
-        ]);
+{
+    $request->validate([
+        'titre' => 'required|string',
+        'description' => 'required|string',
+        'statut' => 'required|in:nouveau,en_cours,résolu',
+        'commentaire' => 'nullable|string',
+    ]);
 
-        $incident->update([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'statut' => $request->statut,
-        ]);
+    // Detectar si ha cambiado el statut
+    $ancienStatut = $incident->statut;
 
-        if ($request->filled('commentaire')) {
-            IncidentComment::create([
-                'incident_id' => $incident->id,
-                'user_id' => Auth::id(),
-                'commentaire' => $request->commentaire,
-            ]);
-        }
+    $incident->update([
+        'titre' => $request->titre,
+        'description' => $request->description,
+        'statut' => $request->statut,
+    ]);
 
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+    // Notificar al usuario si se ha cambiado el statut
+    if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
+        $incident->utilisateur->notify(new \App\Notifications\IncidentStatutUpdated($incident));
     }
+
+    // Comentario opcional
+    if ($request->filled('commentaire')) {
+        \App\Models\IncidentComment::create([
+            'incident_id' => $incident->id,
+            'user_id' => Auth::id(),
+            'commentaire' => $request->commentaire,
+        ]);
+    }
+
+    return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+}
 
     public function destroy(Incident $incident)
     {

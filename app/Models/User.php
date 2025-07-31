@@ -2,70 +2,46 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // Champs autorisés pour l’insertion de masse
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // utilisateur, admin, gestionnaire
+        'role',
     ];
 
-    // Champs à masquer dans les réponses JSON
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    // Casting automatique des champs
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    // Relaciones
+    public function incidents(): HasMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Incident::class, 'utilisateur_id');
     }
 
-    // 🔐 Vérifie si l'utilisateur est un administrateur
+    // Roles
     public function estAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    // 🛠️ Vérifie si l'utilisateur est un gestionnaire
-    public function estGestionnaire(): bool
-    {
-        return $this->role === 'gestionnaire';
-    }
-
-    // 👤 Vérifie si c’est un utilisateur simple
     public function estUtilisateur(): bool
     {
         return $this->role === 'utilisateur';
-    }
-
-    // 🛡️ Vérifie si l’utilisateur a accès à tous les incidents
-    public function estAdminOuGestionnaire(): bool
-    {
-        return in_array($this->role, ['admin', 'gestionnaire']);
-    }
-
-    // 🔗 Relation avec les incidents créés
-    public function incidentsCréés()
-    {
-        return $this->hasMany(Incident::class, 'utilisateur_id');
-    }
-
-    // 🔗 Relation avec les incidents assignés à l’utilisateur
-    public function incidentsAttribués()
-    {
-        return $this->hasMany(Incident::class, 'attribué_à');
     }
 }
