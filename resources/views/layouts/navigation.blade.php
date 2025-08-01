@@ -12,22 +12,29 @@
 
             <!-- Navigation centrale -->
             <div class="hidden sm:flex space-x-8">
-                <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                    {{ __('Tableau de bord') }}
-                </x-nav-link>
-
                 @auth
                     @if(auth()->user()->estAdmin())
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Tableau de bord') }}
+                        </x-nav-link>
+
                         <x-nav-link :href="route('admin.incidents.index')" :active="request()->routeIs('admin.incidents.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Incidents') }}
                         </x-nav-link>
                     @elseif(auth()->user()->estUtilisateur())
+                        {{-- CATÁLOGO primero --}}
+                        <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Catalogue des incidents') }}
+                        </x-nav-link>
+
+                        {{-- Luego INCIDENCIAS --}}
                         <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Mes Incidents') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {{ __('Catalogue des incidents') }}
+                        {{-- Y por último el DASHBOARD --}}
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Tableau de bord') }}
                         </x-nav-link>
                     @endif
                 @endauth

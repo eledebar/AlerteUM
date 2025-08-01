@@ -71,38 +71,39 @@ class IncidentController extends Controller
     }
 
     public function update(Request $request, Incident $incident)
-    {
-        $request->validate([
-            'titre' => 'required|string',
-            'description' => 'required|string',
-            'statut' => 'required|in:nouveau,en_cours,résolu',
-            'commentaire' => 'nullable|string',
-            'attribue_a' => 'nullable|exists:users,id',
-        ]);
+{
+    $request->validate([
+        // 'titre' => 'required|string', ← eliminar
+        // 'description' => 'required|string', ← eliminar
+        'statut' => 'required|in:nouveau,en_cours,résolu',
+        'commentaire' => 'nullable|string',
+        'attribue_a' => 'nullable|exists:users,id',
+    ]);
 
-        $ancienStatut = $incident->statut;
+    $ancienStatut = $incident->statut;
 
-        $incident->update([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'statut' => $request->statut,
-            'attribue_a' => $request->attribue_a,
-        ]);
+    $incident->update([
+        // 'titre' => $request->titre, ← eliminar
+        // 'description' => $request->description, ← eliminar
+        'statut' => $request->statut,
+        'attribue_a' => $request->attribue_a,
+    ]);
 
-        if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
-            $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
-        }
-
-        if ($request->filled('commentaire')) {
-            IncidentComment::create([
-                'incident_id' => $incident->id,
-                'user_id' => Auth::id(),
-                'commentaire' => $request->commentaire,
-            ]);
-        }
-
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+    if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
+        $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
     }
+
+    if ($request->filled('commentaire')) {
+        IncidentComment::create([
+            'incident_id' => $incident->id,
+            'user_id' => Auth::id(),
+            'commentaire' => $request->commentaire,
+        ]);
+    }
+
+    return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+}
+
 
     public function destroy(Incident $incident)
     {
