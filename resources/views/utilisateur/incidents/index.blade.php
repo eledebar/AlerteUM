@@ -6,8 +6,10 @@
     </x-slot>
 
     <div class="py-8 max-w-6xl mx-auto sm:px-6 lg:px-8">
-        <a href="{{ route('utilisateur.incidents.create') }}" class="mb-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            + Nouvel incident
+        <!-- Redirection vers le catalogue au lieu de créer directement -->
+        <a href="{{ route('utilisateur.incidents.categories') }}"
+           class="mb-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+            + Signaler un incident
         </a>
 
         <form method="GET" class="mb-6 flex items-center space-x-4">

@@ -12,32 +12,28 @@ class Incident extends Model
     protected $fillable = [
         'titre',
         'description',
+        'categorie',
+        'type',
         'statut',
         'utilisateur_id',
         'attribue_a',
     ];
 
-    /**
-     * Utilisateur qui a signalé l’incident
-     */
     public function utilisateur()
     {
         return $this->belongsTo(User::class, 'utilisateur_id');
     }
 
-    /**
-     * Administrateur à qui l’incident est attribué
-     */
     public function gestionnaire()
     {
         return $this->belongsTo(User::class, 'attribue_a');
     }
 
-    /**
-     * Commentaires liés à l’incident
-     */
     public function commentaires()
     {
         return $this->hasMany(IncidentComment::class);
     }
+
+
+
 }

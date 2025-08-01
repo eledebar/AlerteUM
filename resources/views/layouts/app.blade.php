@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data x-cloak>
+<script src="https://kit.fontawesome.com/3e9f0f6842.js" crossorigin="anonymous"></script>
+
 <head>
     <script>
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
