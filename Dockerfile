@@ -1,56 +1,34 @@
-FROM composer:latest AS vendor
+FROM php:8.2-fpm-alpine
 
-WORKDIR /app
+WORKDIR /var/www
 
-COPY . /app
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    unzip \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    icu-dev \
+    zlib-dev \
+    oniguruma-dev \
+    mysql-client \
+    libzip-dev \
+    supervisor
+
+# Extensiones PHP necesarias
+RUN docker-php-ext-install pdo pdo_mysql intl mbstring zip exif pcntl
+
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+COPY . .
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
-FROM php:8.2-cli-alpine
-
-RUN apk add --no-cache \
-    php82-pdo \
-    php82-pdo_mysql \
-    php82-mbstring \
-    php82-tokenizer \
-    php82-xml \
-    php82-ctype \
-    php82-curl \
-    php82-dom \
-    php82-fileinfo \
-    php82-openssl \
-    php82-json \
-    php82-phar \
-    php82-posix \
-    php82-zlib \
-    php82-mysqli \
-    php82-session \
-    php82-simplexml \
-    php82-xmlwriter \
-    php82-mbstring \
-    php82-bcmath \
-    php82-gd \
-    php82-intl \
-    php82-pecl-redis \
-    php82-pcntl \
-    php82-opcache \
-    curl \
-    unzip \
-    git \
-    supervisor \
-    bash \
-    mysql-client
-
-WORKDIR /app
-
-COPY --from=vendor /app /app
-COPY . /app
-
-RUN chmod -R 755 /app \
- && chown -R www-data:www-data /app
-
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV APP_ENV=production
+RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
 
 EXPOSE 8080
 
