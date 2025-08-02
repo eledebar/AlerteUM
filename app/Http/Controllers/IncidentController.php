@@ -19,45 +19,103 @@ class IncidentController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->estAdmin()) {
-            $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
-
-            if ($request->filled('statut')) {
-                $query->where('statut', $request->statut);
-            }
-
-            if ($request->boolean('assigne_a_moi')) {
-                $query->where('attribue_a', Auth::id());
-            }
-
-            $incidents = $query->paginate(10);
-            return view('admin.incidents.index', compact('incidents'));
-        }
-
-        $query = Incident::where('utilisateur_id', $user->id)->latest();
+        $query = $user->estAdmin()
+            ? Incident::with(['utilisateur', 'gestionnaire'])->latest()
+            : Incident::where('utilisateur_id', $user->id)->latest();
 
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        if ($user->estAdmin() && $request->boolean('assigne_a_moi')) {
+            $query->where('attribue_a', Auth::id());
         }
 
-        if ($request->filled('titre')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('titre', 'like', '%' . $request->titre . '%')
-                    ->orWhere('statut', 'like', '%' . $request->titre . '%');
-            });
+        if (!$user->estAdmin()) {
+            if ($request->filled('type')) {
+                $query->where('type', $request->type);
+            }
+            if ($request->filled('titre')) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('titre', 'like', '%' . $request->titre . '%')
+                      ->orWhere('statut', 'like', '%' . $request->titre . '%');
+                });
+            }
+        }
+
+        if ($request->filled('date_debut')) {
+            $query->whereDate('created_at', '>=', $request->date_debut);
+        }
+
+        if ($request->filled('date_fin')) {
+            $query->whereDate('created_at', '<=', $request->date_fin);
         }
 
         $incidents = $query->paginate(10);
-        $typesDisponibles = Incident::distinct()->pluck('type')->filter()->values();
+        $typesDisponibles = $user->estAdmin() ? [] : Incident::distinct()->pluck('type')->filter()->values();
 
-        return view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
+        return $user->estAdmin()
+            ? view('admin.incidents.index', compact('incidents'))
+            : view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
     }
 
-       public function create(Request $request)
+  public function exportCsv(Request $request)
+{
+    $user = Auth::user();
+
+    $query = Incident::where('utilisateur_id', $user->id)->latest();
+
+    if ($request->filled('statut')) {
+        $query->where('statut', $request->statut);
+    }
+
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+
+    if ($request->filled('titre')) {
+        $query->where(function ($q) use ($request) {
+            $q->where('titre', 'like', '%' . $request->titre . '%')
+              ->orWhere('statut', 'like', '%' . $request->titre . '%');
+        });
+    }
+
+    if ($request->filled('date_debut')) {
+        $query->whereDate('created_at', '>=', $request->date_debut);
+    }
+
+    if ($request->filled('date_fin')) {
+        $query->whereDate('created_at', '<=', $request->date_fin);
+    }
+
+    $incidents = $query->get();
+
+    $headers = [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
+    ];
+
+    $callback = function () use ($incidents) {
+        $handle = fopen('php://output', 'w');
+        fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
+
+        foreach ($incidents as $incident) {
+            fputcsv($handle, [
+                $incident->id,
+                $incident->titre,
+                $incident->statut,
+                $incident->type,
+            ]);
+        }
+
+        fclose($handle);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+
+    public function create(Request $request)
     {
         $categorie = $request->input('categorie');
 
@@ -96,6 +154,10 @@ class IncidentController extends Controller
             'types' => $types,
         ]);
     }
+
+
+   
+
     public function store(Request $request)
     {
         if (Auth::user()->estAdmin()) {
@@ -233,88 +295,5 @@ class IncidentController extends Controller
             : view('utilisateur.incidents.show', compact('incident'));
     }
 
-    public function exportCsv(Request $request)
-    {
-        $user = Auth::user();
-
-        if ($user->estAdmin()) {
-            $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
-
-            if ($request->filled('statut')) {
-                $query->where('statut', $request->statut);
-            }
-
-            if ($request->boolean('assigne_a_moi')) {
-                $query->where('attribue_a', $user->id);
-            }
-
-            $incidents = $query->get();
-
-            $headers = [
-                'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="incidents_admin.csv"',
-            ];
-
-            $callback = function () use ($incidents) {
-                $handle = fopen('php://output', 'w');
-                fputcsv($handle, ['ID', 'Titre', 'Statut', 'Utilisateur', 'Gestionnaire']);
-
-                foreach ($incidents as $incident) {
-                    fputcsv($handle, [
-                        $incident->id,
-                        $incident->titre,
-                        $incident->statut,
-                        $incident->utilisateur?->name,
-                        $incident->gestionnaire?->name,
-                    ]);
-                }
-
-                fclose($handle);
-            };
-
-            return response()->stream($callback, 200, $headers);
-        }
-
-        $query = Incident::where('utilisateur_id', $user->id)->latest();
-
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('titre')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('titre', 'like', '%' . $request->titre . '%')
-                    ->orWhere('statut', 'like', '%' . $request->titre . '%');
-            });
-        }
-
-        $incidents = $query->get();
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
-        ];
-
-        $callback = function () use ($incidents) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
-
-            foreach ($incidents as $incident) {
-                fputcsv($handle, [
-                    $incident->id,
-                    $incident->titre,
-                    $incident->statut,
-                    $incident->type,
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
+   
 }

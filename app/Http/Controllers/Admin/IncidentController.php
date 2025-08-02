@@ -24,6 +24,14 @@ class IncidentController extends Controller
             $query->where('attribue_a', Auth::id());
         }
 
+        if ($request->filled('date_debut')) {
+            $query->whereDate('created_at', '>=', $request->date_debut);
+        }
+
+        if ($request->filled('date_fin')) {
+            $query->whereDate('created_at', '<=', $request->date_fin);
+        }
+
         $incidents = $query->paginate(10);
 
         return view('admin.incidents.index', compact('incidents'));
@@ -114,6 +122,14 @@ class IncidentController extends Controller
 
         if ($request->boolean('assigne_a_moi')) {
             $query->where('attribue_a', Auth::id());
+        }
+
+        if ($request->filled('date_debut')) {
+            $query->whereDate('created_at', '>=', $request->date_debut);
+        }
+
+        if ($request->filled('date_fin')) {
+            $query->whereDate('created_at', '<=', $request->date_fin);
         }
 
         $incidents = $query->get();

@@ -11,7 +11,7 @@
                 + Nouvel incident
             </a>
 
-            <a href="{{ route('admin.incidents.export.csv', request()->only(['statut', 'assigne_a_moi'])) }}"
+            <a href="{{ route('admin.incidents.export.csv', request()->only(['statut', 'assigne_a_moi', 'date_debut', 'date_fin'])) }}"
                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
                 ⬇️ Exporter en CSV
             </a>
@@ -35,6 +35,24 @@
                        onchange="this.form.submit()"
                        {{ request()->boolean('assigne_a_moi') ? 'checked' : '' }}>
             </div>
+
+            <div>
+                <label for="date_debut" class="mr-2 font-medium text-gray-800 dark:text-gray-200">Du:</label>
+                <input type="date" id="date_debut" name="date_debut" value="{{ request('date_debut') }}"
+                       class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1 rounded">
+            </div>
+
+            <div>
+                <label for="date_fin" class="mr-2 font-medium text-gray-800 dark:text-gray-200">Au:</label>
+                <input type="date" id="date_fin" name="date_fin" value="{{ request('date_fin') }}"
+                       class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-1 rounded">
+            </div>
+
+            <div>
+                <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
+                    Filtrer
+                </button>
+            </div>
         </form>
 
         <div class="mb-6">
@@ -50,73 +68,93 @@
 
         <table class="min-w-full bg-white dark:bg-gray-800 shadow-md rounded text-gray-900 dark:text-gray-100" id="incidentTable">
             <thead>
-                <tr>
-                    <th class="px-6 py-3 text-left font-bold">Titre</th>
-                    <th class="px-6 py-3 text-left font-bold">Statut</th>
-                    <th class="px-6 py-3 text-left font-bold">Créé par</th>
-                    <th class="px-6 py-3 text-left font-bold">Assigné à</th>
-                    <th class="px-6 py-3 text-left font-bold">Actions</th>
-                </tr>
+            <tr>
+                <th class="px-6 py-3 text-left font-bold">Titre</th>
+                <th class="px-6 py-3 text-left font-bold">Statut</th>
+                <th class="px-6 py-3 text-left font-bold">Créé par</th>
+                <th class="px-6 py-3 text-left font-bold">Assigné à</th>
+                <th class="px-6 py-3 text-left font-bold">Actions</th>
+            </tr>
             </thead>
             <tbody>
-                @forelse ($incidents as $incident)
-                    <tr class="border-b border-gray-200 dark:border-gray-700">
-                        <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
-                        <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
-                        <td class="px-6 py-4 incident-user">{{ $incident->utilisateur?->name ?? '—' }}</td>
-                        <td class="px-6 py-4 incident-gestionnaire">{{ $incident->gestionnaire?->name ?? '—' }}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-start gap-2">
-                                <a href="{{ route('admin.incidents.show', $incident) }}"
-                                   class="w-8 h-8 transition-transform transform hover:scale-110">
-                                    <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
-                                </a>
-                                <a href="{{ route('admin.incidents.edit', $incident) }}"
-                                   class="w-8 h-8 transition-transform transform hover:scale-110">
-                                    <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
-                                </a>
-                                <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST"
-                                      onsubmit="return confirm('Supprimer cet incident ?')"
-                                      class="w-8 h-8 transition-transform transform hover:scale-110">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full h-full">
-                                        <img src="{{ asset('delete.webp') }}" alt="Supprimer" class="w-full h-full object-contain rounded" />
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
-                    </tr>
-                @endforelse
+            @forelse ($incidents as $incident)
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
+                    <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
+                    <td class="px-6 py-4 incident-user">{{ $incident->utilisateur?->name ?? '—' }}</td>
+                    <td class="px-6 py-4 incident-gestionnaire">{{ $incident->gestionnaire?->name ?? '—' }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-start gap-2">
+                            <a href="{{ route('admin.incidents.show', $incident) }}"
+                               class="w-8 h-8 transition-transform transform hover:scale-110">
+                                <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
+                            </a>
+                            <a href="{{ route('admin.incidents.edit', $incident) }}"
+                               class="w-8 h-8 transition-transform transform hover:scale-110">
+                                <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
+                            </a>
+                            <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST"
+                                  onsubmit="return confirm('Supprimer cet incident ?')"
+                                  class="w-8 h-8 transition-transform transform hover:scale-110">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full h-full">
+                                    <img src="{{ asset('delete.webp') }}" alt="Supprimer" class="w-full h-full object-contain rounded" />
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
+                </tr>
+            @endforelse
             </tbody>
         </table>
 
         <div class="mt-6">
-            {{ $incidents->appends(request()->only('statut', 'assigne_a_moi'))->links() }}
+            {{ $incidents->appends(request()->all())->links() }}
         </div>
     </div>
 
     <script>
-        document.getElementById('searchInput').addEventListener('keyup', function () {
-            const searchValue = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#incidentTable tbody tr');
+        document.addEventListener("DOMContentLoaded", function () {
+            const debut = document.getElementById('date_debut');
+            const fin = document.getElementById('date_fin');
 
-            rows.forEach(row => {
-                const title = row.querySelector('.incident-title')?.textContent.toLowerCase() || '';
-                const statut = row.querySelector('.incident-statut')?.textContent.toLowerCase() || '';
-                const user = row.querySelector('.incident-user')?.textContent.toLowerCase() || '';
-                const gestionnaire = row.querySelector('.incident-gestionnaire')?.textContent.toLowerCase() || '';
+            function ajusterMinMax() {
+                if (debut.value) {
+                    fin.min = debut.value;
+                    if (fin.value && fin.value < debut.value) fin.value = debut.value;
+                }
+                if (fin.value) {
+                    debut.max = fin.value;
+                    if (debut.value && debut.value > fin.value) debut.value = fin.value;
+                }
+            }
 
-                row.style.display = (
-                    title.includes(searchValue) ||
-                    statut.includes(searchValue) ||
-                    user.includes(searchValue) ||
-                    gestionnaire.includes(searchValue)
-                ) ? '' : 'none';
+            debut.addEventListener('change', ajusterMinMax);
+            fin.addEventListener('change', ajusterMinMax);
+            ajusterMinMax();
+
+            document.getElementById('searchInput').addEventListener('keyup', function () {
+                const searchValue = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#incidentTable tbody tr');
+
+                rows.forEach(row => {
+                    const title = row.querySelector('.incident-title')?.textContent.toLowerCase() || '';
+                    const statut = row.querySelector('.incident-statut')?.textContent.toLowerCase() || '';
+                    const user = row.querySelector('.incident-user')?.textContent.toLowerCase() || '';
+                    const gestionnaire = row.querySelector('.incident-gestionnaire')?.textContent.toLowerCase() || '';
+
+                    row.style.display = (
+                        title.includes(searchValue) ||
+                        statut.includes(searchValue) ||
+                        user.includes(searchValue) ||
+                        gestionnaire.includes(searchValue)
+                    ) ? '' : 'none';
+                });
             });
         });
     </script>
