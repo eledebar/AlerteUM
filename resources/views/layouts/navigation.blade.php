@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center h-16">
 
             <div class="flex items-center space-x-3">
-                <a href="{{ route('utilisateur.home') }}" class="flex items-center space-x-2">
+<a href="{{ auth()->user()?->estAdmin() ? route('dashboard') : route('utilisateur.home') }}" class="flex items-center space-x-2">
                     <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
                     <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">AlerteUM</span>
                 </a>
