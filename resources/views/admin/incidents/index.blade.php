@@ -65,23 +65,26 @@
                         <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
                         <td class="px-6 py-4 incident-user">{{ $incident->utilisateur?->name ?? '—' }}</td>
                         <td class="px-6 py-4 incident-gestionnaire">{{ $incident->gestionnaire?->name ?? '—' }}</td>
-                        <td class="px-6 py-4 flex flex-wrap gap-2">
-                            <a href="{{ route('admin.incidents.show', $incident) }}"
-                               class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 rounded transition">
-                                Voir
-                            </a>
-                            <a href="{{ route('admin.incidents.edit', $incident) }}"
-                               class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900 hover:bg-yellow-200 dark:hover:bg-yellow-800 rounded transition">
-                                Modifier
-                            </a>
-                            <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet incident ?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 rounded transition">
-                                    Supprimer
-                                </button>
-                            </form>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-start gap-2">
+                                <a href="{{ route('admin.incidents.show', $incident) }}"
+                                   class="w-8 h-8 transition-transform transform hover:scale-110">
+                                    <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
+                                </a>
+                                <a href="{{ route('admin.incidents.edit', $incident) }}"
+                                   class="w-8 h-8 transition-transform transform hover:scale-110">
+                                    <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
+                                </a>
+                                <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST"
+                                      onsubmit="return confirm('Supprimer cet incident ?')"
+                                      class="w-8 h-8 transition-transform transform hover:scale-110">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full h-full">
+                                        <img src="{{ asset('delete.webp') }}" alt="Supprimer" class="w-full h-full object-contain rounded" />
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
