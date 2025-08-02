@@ -19,19 +19,25 @@
                         <x-nav-link :href="route('admin.incidents.index')" :active="request()->routeIs('admin.incidents.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Incidents') }}
                         </x-nav-link>
+
                     @elseif(auth()->user()->estUtilisateur())
-<x-nav-link :href="route('utilisateur.home')" :active="request()->routeIs('utilisateur.home')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-    {{ __('Accueil') }}
-</x-nav-link>
+
+                        <x-nav-link :href="route('utilisateur.home')" :active="request()->routeIs('utilisateur.home')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Accueil') }}
+                        </x-nav-link>
 
                         <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Signaler un incident') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Mes incidents') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Tableau de bord') }}
                         </x-nav-link>
+
                     @endif
                 @endauth
             </div>
