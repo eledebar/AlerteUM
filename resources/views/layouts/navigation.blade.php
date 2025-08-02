@@ -4,7 +4,7 @@
 
             <!-- Logo + Titre -->
             <div class="flex items-center space-x-3">
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
+                <a href="{{ route('utilisateur.home') }}" class="flex items-center space-x-2">
                     <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
                     <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">AlerteUM</span>
                 </a>
@@ -22,6 +22,11 @@
                             {{ __('Incidents') }}
                         </x-nav-link>
                     @elseif(auth()->user()->estUtilisateur())
+                    {{-- HOME del utilisateur --}}
+<x-nav-link :href="route('utilisateur.home')" :active="request()->routeIs('utilisateur.home')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+    {{ __('Accueil') }}
+</x-nav-link>
+
                         {{-- CATÁLOGO primero --}}
                         <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Catalogue des incidents') }}

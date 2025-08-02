@@ -17,11 +17,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Rutas de utilisateur
+/// Rutas de utilisateur
 Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('utilisateur.')->group(function () {
+    Route::get('/home', function () {
+        return view('utilisateur.home');
+    })->name('home');
+
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
-    // ✅ RUTA DE CATEGORÍAS (DEBE IR ANTES DE LAS RUTAS CON {incident})
     Route::get('/incidents/categories', function () {
         return view('utilisateur.incidents.categories');
     })->name('incidents.categories');
@@ -34,6 +37,7 @@ Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('ut
     Route::delete('/incidents/{incident}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
     Route::get('/incidents/{incident}', [IncidentController::class, 'show'])->name('incidents.show');
 });
+
 
 // Rutas de admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
