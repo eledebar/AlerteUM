@@ -13,21 +13,21 @@ use App\Notifications\IncidentStatutUpdated;
 class IncidentController extends Controller
 {
     public function index(Request $request)
-{
-    $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
+    {
+        $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
 
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->boolean('assigne_a_moi')) {
+            $query->where('attribue_a', Auth::id());
+        }
+
+        $incidents = $query->paginate(10);
+
+        return view('admin.incidents.index', compact('incidents'));
     }
-
-    if ($request->boolean('assigne_a_moi')) {
-        $query->where('attribue_a', Auth::id());
-    }
-
-    $incidents = $query->paginate(10);
-
-    return view('admin.incidents.index', compact('incidents'));
-}
 
     public function create()
     {
@@ -69,39 +69,77 @@ class IncidentController extends Controller
     }
 
     public function update(Request $request, Incident $incident)
-{
-    $request->validate([
-        'statut' => 'required|in:nouveau,en_cours,résolu',
-        'commentaire' => 'nullable|string',
-        'attribue_a' => 'nullable|exists:users,id',
-    ]);
-
-    $ancienStatut = $incident->statut;
-
-    $incident->update([
-        'statut' => $request->statut,
-        'attribue_a' => $request->attribue_a,
-    ]);
-
-    if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
-        $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
-    }
-
-    if ($request->filled('commentaire')) {
-        IncidentComment::create([
-            'incident_id' => $incident->id,
-            'user_id' => Auth::id(),
-            'commentaire' => $request->commentaire,
+    {
+        $request->validate([
+            'statut' => 'required|in:nouveau,en_cours,résolu',
+            'commentaire' => 'nullable|string',
+            'attribue_a' => 'nullable|exists:users,id',
         ]);
+
+        $ancienStatut = $incident->statut;
+
+        $incident->update([
+            'statut' => $request->statut,
+            'attribue_a' => $request->attribue_a,
+        ]);
+
+        if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
+            $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
+        }
+
+        if ($request->filled('commentaire')) {
+            IncidentComment::create([
+                'incident_id' => $incident->id,
+                'user_id' => Auth::id(),
+                'commentaire' => $request->commentaire,
+            ]);
+        }
+
+        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
     }
-
-    return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
-}
-
 
     public function destroy(Incident $incident)
     {
         $incident->delete();
         return redirect()->route('admin.incidents.index')->with('success', 'Incident supprimé.');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->boolean('assigne_a_moi')) {
+            $query->where('attribue_a', Auth::id());
+        }
+
+        $incidents = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="incidents_admin.csv"',
+        ];
+
+        $callback = function () use ($incidents) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Utilisateur', 'Gestionnaire']);
+
+            foreach ($incidents as $incident) {
+                fputcsv($handle, [
+                    $incident->id,
+                    $incident->titre,
+                    $incident->statut,
+                    $incident->utilisateur?->name,
+                    $incident->gestionnaire?->name,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

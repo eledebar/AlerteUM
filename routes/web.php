@@ -33,12 +33,13 @@ Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('ut
     Route::put('/incidents/{incident}', [IncidentController::class, 'update'])->name('incidents.update');
     Route::delete('/incidents/{incident}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
     Route::get('/incidents/{incident}', [IncidentController::class, 'show'])->name('incidents.show');
+    Route::get('/incidents/export/csv', [IncidentController::class, 'exportCsv'])->name('incidents.export.csv');
 });
 
-
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('incidents', AdminIncidentController::class);
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/incidents/export/csv', [AdminIncidentController::class, 'exportCsv'])->name('incidents.export.csv');
+    Route::resource('incidents', AdminIncidentController::class);
 });
 
 Route::middleware(['auth'])->group(function () {

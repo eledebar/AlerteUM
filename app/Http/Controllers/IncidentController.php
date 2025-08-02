@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Incident;
 use App\Models\User;
+use App\Models\IncidentComment;
+use App\Notifications\IncidentStatutUpdated;
 use App\Notifications\NouvelleIncidentCree;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +18,22 @@ class IncidentController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        if ($user->estAdmin()) {
+            $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
+
+            if ($request->filled('statut')) {
+                $query->where('statut', $request->statut);
+            }
+
+            if ($request->boolean('assigne_a_moi')) {
+                $query->where('attribue_a', Auth::id());
+            }
+
+            $incidents = $query->paginate(10);
+            return view('admin.incidents.index', compact('incidents'));
+        }
+
         $query = Incident::where('utilisateur_id', $user->id)->latest();
 
         if ($request->filled('statut')) {
@@ -39,7 +57,7 @@ class IncidentController extends Controller
         return view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
     }
 
-    public function create(Request $request)
+       public function create(Request $request)
     {
         $categorie = $request->input('categorie');
 
@@ -78,9 +96,27 @@ class IncidentController extends Controller
             'types' => $types,
         ]);
     }
-
     public function store(Request $request)
     {
+        if (Auth::user()->estAdmin()) {
+            $request->validate([
+                'titre' => 'required|string',
+                'description' => 'required|string',
+                'utilisateur_id' => 'required|exists:users,id',
+                'attribue_a' => 'nullable|exists:users,id',
+            ]);
+
+            Incident::create([
+                'titre' => $request->titre,
+                'description' => $request->description,
+                'statut' => 'nouveau',
+                'utilisateur_id' => $request->utilisateur_id,
+                'attribue_a' => $request->attribue_a,
+            ]);
+
+            return redirect()->route('admin.incidents.index')->with('success', 'Incident créé avec succès.');
+        }
+
         $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'required|string',
@@ -104,9 +140,14 @@ class IncidentController extends Controller
     {
         $this->authorize('update', $incident);
 
+        if (Auth::user()->estAdmin()) {
+            $incident->load(['utilisateur', 'commentaires.auteur']);
+            $admins = User::where('role', 'admin')->get();
+            return view('admin.incidents.edit', compact('incident', 'admins'));
+        }
+
         if ($incident->statut !== 'nouveau') {
-            return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'Impossible de modifier un incident déjà traité.');
+            return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de modifier un incident déjà traité.');
         }
 
         return view('utilisateur.incidents.edit', compact('incident'));
@@ -116,9 +157,37 @@ class IncidentController extends Controller
     {
         $this->authorize('update', $incident);
 
+        if (Auth::user()->estAdmin()) {
+            $request->validate([
+                'statut' => 'required|in:nouveau,en_cours,résolu',
+                'commentaire' => 'nullable|string',
+                'attribue_a' => 'nullable|exists:users,id',
+            ]);
+
+            $ancienStatut = $incident->statut;
+
+            $incident->update([
+                'statut' => $request->statut,
+                'attribue_a' => $request->attribue_a,
+            ]);
+
+            if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
+                $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
+            }
+
+            if ($request->filled('commentaire')) {
+                IncidentComment::create([
+                    'incident_id' => $incident->id,
+                    'user_id' => Auth::id(),
+                    'commentaire' => $request->commentaire,
+                ]);
+            }
+
+            return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+        }
+
         if ($incident->statut !== 'nouveau') {
-            return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'Impossible de mettre à jour un incident déjà traité.');
+            return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de mettre à jour un incident déjà traité.');
         }
 
         $request->validate([
@@ -131,8 +200,7 @@ class IncidentController extends Controller
             'description' => $request->description,
         ]);
 
-        return redirect()->route('utilisateur.incidents.index')
-            ->with('success', 'Incident mis à jour avec succès.');
+        return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
     }
 
     public function destroy(Incident $incident)
@@ -140,14 +208,14 @@ class IncidentController extends Controller
         $this->authorize('delete', $incident);
 
         if ($incident->statut !== 'nouveau') {
-            return redirect()->route('utilisateur.incidents.index')
-                ->with('error', 'Impossible de supprimer un incident déjà traité.');
+            return redirect()->back()->with('error', 'Impossible de supprimer un incident déjà traité.');
         }
 
         $incident->delete();
 
-        return redirect()->route('utilisateur.incidents.index')
-            ->with('success', 'Incident supprimé avec succès.');
+        $route = Auth::user()->estAdmin() ? 'admin.incidents.index' : 'utilisateur.incidents.index';
+
+        return redirect()->route($route)->with('success', 'Incident supprimé avec succès.');
     }
 
     public function show(Incident $incident)
@@ -160,10 +228,93 @@ class IncidentController extends Controller
 
         $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
 
+        return $user->estAdmin()
+            ? view('admin.incidents.show', compact('incident'))
+            : view('utilisateur.incidents.show', compact('incident'));
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $user = Auth::user();
+
         if ($user->estAdmin()) {
-            return view('admin.incidents.show', compact('incident'));
+            $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
+
+            if ($request->filled('statut')) {
+                $query->where('statut', $request->statut);
+            }
+
+            if ($request->boolean('assigne_a_moi')) {
+                $query->where('attribue_a', $user->id);
+            }
+
+            $incidents = $query->get();
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="incidents_admin.csv"',
+            ];
+
+            $callback = function () use ($incidents) {
+                $handle = fopen('php://output', 'w');
+                fputcsv($handle, ['ID', 'Titre', 'Statut', 'Utilisateur', 'Gestionnaire']);
+
+                foreach ($incidents as $incident) {
+                    fputcsv($handle, [
+                        $incident->id,
+                        $incident->titre,
+                        $incident->statut,
+                        $incident->utilisateur?->name,
+                        $incident->gestionnaire?->name,
+                    ]);
+                }
+
+                fclose($handle);
+            };
+
+            return response()->stream($callback, 200, $headers);
         }
 
-        return view('utilisateur.incidents.show', compact('incident'));
+        $query = Incident::where('utilisateur_id', $user->id)->latest();
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('titre')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('titre', 'like', '%' . $request->titre . '%')
+                    ->orWhere('statut', 'like', '%' . $request->titre . '%');
+            });
+        }
+
+        $incidents = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
+        ];
+
+        $callback = function () use ($incidents) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
+
+            foreach ($incidents as $incident) {
+                fputcsv($handle, [
+                    $incident->id,
+                    $incident->titre,
+                    $incident->statut,
+                    $incident->type,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

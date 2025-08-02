@@ -6,10 +6,18 @@
     </x-slot>
 
     <div class="py-8 max-w-6xl mx-auto sm:px-6 lg:px-8">
-        <a href="{{ route('utilisateur.incidents.categories') }}"
-           class="mb-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
-            + Signaler un incident
-        </a>
+        <div class="mb-4 flex flex-wrap gap-4">
+            <a href="{{ route('utilisateur.incidents.categories') }}"
+               class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+                + Signaler un incident
+            </a>
+
+            {{-- Corrección aquí: usamos route utilisateur.incidents.export.csv --}}
+            <a href="{{ route('utilisateur.incidents.export.csv', request()->only(['statut', 'type', 'titre'])) }}"
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                ⬇️ Exporter en CSV
+            </a>
+        </div>
 
         <form method="GET" class="mb-6 flex items-center space-x-4">
             <div>

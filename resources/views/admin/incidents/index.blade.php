@@ -6,9 +6,16 @@
     </x-slot>
 
     <div class="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <a href="{{ route('admin.incidents.create') }}" class="mb-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            + Nouvel incident
-        </a>
+        <div class="mb-4 flex flex-wrap gap-4">
+            <a href="{{ route('admin.incidents.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                + Nouvel incident
+            </a>
+
+            <a href="{{ route('admin.incidents.export.csv', request()->only(['statut', 'assigne_a_moi'])) }}"
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                ⬇️ Exporter en CSV
+            </a>
+        </div>
 
         <form method="GET" class="mb-6 flex flex-wrap items-center gap-4">
             <div>
