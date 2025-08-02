@@ -22,7 +22,7 @@ class NouvelleIncidentCree extends Notification
 
     public function via($notifiable)
     {
-        return ['database', 'mail']; // ← Añadimos "mail"
+        return ['database', 'mail']; 
     }
 
     public function toDatabase($notifiable)

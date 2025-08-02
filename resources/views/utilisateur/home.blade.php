@@ -2,7 +2,6 @@
     <div class="bg-gray-50 dark:bg-gray-900 py-20">
         <div class="max-w-6xl mx-auto px-6 space-y-28">
 
-            <!-- HERO -->
             <section class="flex flex-col-reverse md:flex-row items-center justify-between gap-10 md:gap-16">
                 <div class="flex-1 text-center md:text-left">
                     <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white leading-tight">
@@ -28,7 +27,6 @@
                 </div>
             </section>
 
-            <!-- ÉTAPES -->
             <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl px-10 py-14 grid md:grid-cols-2 items-center gap-12">
                 <div class="flex justify-center">
                     <img src="{{ asset('steps.webp') }}"
@@ -48,7 +46,6 @@
                 </div>
             </section>
 
-            <!-- CONTACT -->
             <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl px-10 py-14 grid md:grid-cols-2 items-start gap-12">
                 <div class="space-y-5 text-sm text-gray-700 dark:text-gray-300">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">

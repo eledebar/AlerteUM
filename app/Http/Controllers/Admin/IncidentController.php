@@ -16,12 +16,10 @@ class IncidentController extends Controller
 {
     $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
 
-    // Filtro por statut si existe
     if ($request->filled('statut')) {
         $query->where('statut', $request->statut);
     }
 
-    // Filtro por "assignés à moi"
     if ($request->boolean('assigne_a_moi')) {
         $query->where('attribue_a', Auth::id());
     }
@@ -73,8 +71,6 @@ class IncidentController extends Controller
     public function update(Request $request, Incident $incident)
 {
     $request->validate([
-        // 'titre' => 'required|string', ← eliminar
-        // 'description' => 'required|string', ← eliminar
         'statut' => 'required|in:nouveau,en_cours,résolu',
         'commentaire' => 'nullable|string',
         'attribue_a' => 'nullable|exists:users,id',
@@ -83,8 +79,6 @@ class IncidentController extends Controller
     $ancienStatut = $incident->statut;
 
     $incident->update([
-        // 'titre' => $request->titre, ← eliminar
-        // 'description' => $request->description, ← eliminar
         'statut' => $request->statut,
         'attribue_a' => $request->attribue_a,
     ]);

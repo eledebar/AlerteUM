@@ -22,7 +22,6 @@ class DashboardController extends Controller
                 $queryBase->where('attribue_a', $user->id);
             }
 
-            // Conteos individuales por statut
             $pendientes = (clone $queryBase)->where('statut', 'nouveau')->count();
             $enProceso  = (clone $queryBase)->where('statut', 'en_cours')->count();
             $resueltas  = (clone $queryBase)->where('statut', 'résolu')->count();

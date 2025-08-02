@@ -20,7 +20,7 @@ class IncidentStatusChanged extends Notification
 
     public function via($notifiable)
     {
-        return ['mail', 'database']; // Email y en la base de datos
+        return ['mail', 'database']; 
     }
 
     public function toMail($notifiable)

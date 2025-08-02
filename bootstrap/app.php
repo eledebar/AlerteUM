@@ -12,7 +12,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Alias para middleware personalizados
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);

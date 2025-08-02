@@ -44,7 +44,7 @@
         }
 
         .container h1 span {
-            color: #facc15; /* amarillo */
+            color: #facc15; 
         }
 
         .logo {
@@ -69,7 +69,7 @@
 
         ul li::before {
             content: '•';
-            color: #60a5fa; /* azul claro */
+            color: #60a5fa; 
             font-size: 1.5em;
             position: absolute;
             left: 0;

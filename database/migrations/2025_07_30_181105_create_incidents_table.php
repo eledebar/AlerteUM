@@ -13,10 +13,8 @@ return new class extends Migration {
             $table->text('description');
             $table->enum('statut', ['nouveau', 'en_cours', 'résolu'])->default('nouveau');
             
-            // L'utilisateur qui a signalé l'incident
             $table->foreignId('utilisateur_id')->constrained('users')->onDelete('cascade');
             
-            // L'utilisateur à qui l'incident est attribué (peut être null au début)
             $table->foreignId('attribue_a')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();

@@ -7,17 +7,14 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-// Ruta pública
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-/// Rutas de utilisateur
 Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('utilisateur.')->group(function () {
     Route::get('/home', function () {
         return view('utilisateur.home');
@@ -39,13 +36,11 @@ Route::middleware(['auth', 'role:utilisateur'])->prefix('utilisateur')->name('ut
 });
 
 
-// Rutas de admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('incidents', AdminIncidentController::class);
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 });
 
-// Perfil
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

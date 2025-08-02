@@ -28,13 +28,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    // Relaciones
     public function incidents(): HasMany
     {
         return $this->hasMany(Incident::class, 'utilisateur_id');
     }
 
-    // Roles
+    
     public function estAdmin(): bool
     {
         return $this->role === 'admin';
