@@ -27,7 +27,7 @@
                         </x-nav-link>
 
                         <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {{ __('Signaler un incident') }}
+                            {{ __('Catalogue des incidents') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
