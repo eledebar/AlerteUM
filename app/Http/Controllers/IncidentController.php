@@ -59,61 +59,53 @@ class IncidentController extends Controller
             : view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
     }
 
-  public function exportCsv(Request $request)
-{
-    $user = Auth::user();
+    public function exportCsv(Request $request)
+    {
+        $user = Auth::user();
+        $query = Incident::where('utilisateur_id', $user->id)->latest();
 
-    $query = Incident::where('utilisateur_id', $user->id)->latest();
-
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
-    }
-
-    if ($request->filled('type')) {
-        $query->where('type', $request->type);
-    }
-
-    if ($request->filled('titre')) {
-        $query->where(function ($q) use ($request) {
-            $q->where('titre', 'like', '%' . $request->titre . '%')
-              ->orWhere('statut', 'like', '%' . $request->titre . '%');
-        });
-    }
-
-    if ($request->filled('date_debut')) {
-        $query->whereDate('created_at', '>=', $request->date_debut);
-    }
-
-    if ($request->filled('date_fin')) {
-        $query->whereDate('created_at', '<=', $request->date_fin);
-    }
-
-    $incidents = $query->get();
-
-    $headers = [
-        'Content-Type' => 'text/csv',
-        'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
-    ];
-
-    $callback = function () use ($incidents) {
-        $handle = fopen('php://output', 'w');
-        fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
-
-        foreach ($incidents as $incident) {
-            fputcsv($handle, [
-                $incident->id,
-                $incident->titre,
-                $incident->statut,
-                $incident->type,
-            ]);
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        if ($request->filled('titre')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('titre', 'like', '%' . $request->titre . '%')
+                  ->orWhere('statut', 'like', '%' . $request->titre . '%');
+            });
+        }
+        if ($request->filled('date_debut')) {
+            $query->whereDate('created_at', '>=', $request->date_debut);
+        }
+        if ($request->filled('date_fin')) {
+            $query->whereDate('created_at', '<=', $request->date_fin);
         }
 
-        fclose($handle);
-    };
+        $incidents = $query->get();
 
-    return response()->stream($callback, 200, $headers);
-}
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
+        ];
 
+        $callback = function () use ($incidents) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
+            foreach ($incidents as $incident) {
+                fputcsv($handle, [
+                    $incident->id,
+                    $incident->titre,
+                    $incident->statut,
+                    $incident->type,
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 
     public function create(Request $request)
     {
@@ -121,30 +113,30 @@ class IncidentController extends Controller
 
         $types = match ($categorie) {
             'communication' => [
-                'Messagerie' => "Difficultés d'accès ou d'envoi/réception via la messagerie institutionnelle (email universitaire). Merci d'indiquer l'adresse concernée et le type d'erreur rencontré.",
-                'Outils collaboratifs' => "Problème avec des outils collaboratifs tels que le drive partagé, calendrier, documents collaboratifs. Veuillez préciser l’outil concerné et le type de dysfonctionnement.",
+                'Messagerie' => "Difficultés d'accès ou d'envoi/réception via la messagerie institutionnelle...",
+                'Outils collaboratifs' => "Problème avec des outils collaboratifs tels que le drive partagé...",
             ],
             'acces' => [
-                'Connexion Internet' => "Accès limité ou inexistant au réseau câblé ou Wi-Fi. Indiquez l’emplacement exact (bâtiment/salle), le matériel utilisé, si le problème est isolé ou général, et tout message d’erreur reçu.",
-                'Problèmes de mot de passe' => "Connexion impossible à cause d’un mot de passe oublié ou erroné. Essayez de le réinitialiser via le portail. Si cela ne fonctionne pas, indiquez votre identifiant et la date du dernier accès fonctionnel.",
+                'Connexion Internet' => "Accès limité ou inexistant au réseau câblé ou Wi-Fi...",
+                'Problèmes de mot de passe' => "Connexion impossible à cause d’un mot de passe oublié ou erroné...",
             ],
             'plateformes' => [
-                'Formulaires en ligne' => "Erreur lors de la soumission ou de l'affichage de formulaires administratifs ou pédagogiques. Précisez le nom du formulaire, l’URL, le message d’erreur, et votre navigateur.",
-                'Sites web universitaires' => "Site web inaccessible ou éléments non fonctionnels. Mentionnez l’URL exacte, l’heure du problème, et la nature de la panne (chargement lent, page blanche, etc.).",
+                'Formulaires en ligne' => "Erreur lors de la soumission ou de l'affichage de formulaires...",
+                'Sites web universitaires' => "Site web inaccessible ou éléments non fonctionnels...",
             ],
             'equipements' => [
-                'Matériel défectueux' => "Problème matériel (ordinateur, imprimante, scanner...). Décrivez le type de matériel, le numéro d’inventaire si possible, le lieu d’installation, et les symptômes de la panne.",
-                'Logiciels manquants' => "Un logiciel requis est absent de votre poste. Indiquez le nom exact du logiciel, l’usage prévu, le système d’exploitation, et si une version spécifique est requise.",
-                'Problème de licence' => "Un logiciel signale un problème de licence (licence expirée, non reconnue, activation impossible). Merci d’indiquer le logiciel, la version, et le message d’erreur affiché.",
+                'Matériel défectueux' => "Problème matériel (ordinateur, imprimante...)",
+                'Logiciels manquants' => "Un logiciel requis est absent de votre poste...",
+                'Problème de licence' => "Un logiciel signale un problème de licence...",
             ],
             'enseignement' => [
-                'Équipements de labo' => "Défaillance d’un appareil dans un laboratoire ou atelier pédagogique. Précisez l’équipement, le local, l’horaire et la nature du dysfonctionnement rencontré.",
-                'Accès à bases de données' => "Impossibilité d’accès à des ressources scientifiques (Scopus, Web of Science, etc.). Indiquez la base concernée, le message d’erreur, et votre mode d’accès (VPN, campus, proxy...).",
+                'Équipements de labo' => "Défaillance d’un appareil dans un laboratoire ou atelier...",
+                'Accès à bases de données' => "Impossibilité d’accès à des ressources scientifiques...",
             ],
             'assistance' => [
-                'Demande d’assistance' => "Vous avez besoin d’une aide pour une tâche numérique spécifique. Décrivez votre besoin le plus précisément possible afin d’orienter l’intervention.",
-                'Orientation numérique' => "Demande d’accompagnement pour l’utilisation des outils numériques (connexion, usage de Moodle, etc.). Précisez vos objectifs et les blocages rencontrés.",
-                'Autres demandes' => "Votre demande ne correspond à aucune catégorie listée. Merci de détailler votre situation, le service concerné, et les actions déjà tentées.",
+                'Demande d’assistance' => "Vous avez besoin d’une aide pour une tâche numérique...",
+                'Orientation numérique' => "Demande d’accompagnement pour l’utilisation des outils numériques...",
+                'Autres demandes' => "Votre demande ne correspond à aucune catégorie listée...",
             ],
             default => [],
         };
@@ -154,9 +146,6 @@ class IncidentController extends Controller
             'types' => $types,
         ]);
     }
-
-
-   
 
     public function store(Request $request)
     {
@@ -179,6 +168,7 @@ class IncidentController extends Controller
             return redirect()->route('admin.incidents.index')->with('success', 'Incident créé avec succès.');
         }
 
+        // Usuario normal
         $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'required|string',
@@ -194,6 +184,11 @@ class IncidentController extends Controller
             'statut' => 'nouveau',
             'utilisateur_id' => Auth::id(),
         ]);
+
+        // 🔔 Notificar a todos los administradores
+        User::where('role', 'admin')->get()->each(function ($admin) use ($incident) {
+            $admin->notify(new NouvelleIncidentCree($incident));
+        });
 
         return redirect()->route('utilisateur.incidents.show', $incident)->with('success', 'Incident créé avec succès.');
     }
@@ -294,6 +289,4 @@ class IncidentController extends Controller
             ? view('admin.incidents.show', compact('incident'))
             : view('utilisateur.incidents.show', compact('incident'));
     }
-
-   
 }

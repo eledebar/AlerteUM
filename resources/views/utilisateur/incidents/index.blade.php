@@ -117,9 +117,27 @@
         </div>
     </div>
 
-    <!-- Buscador funcional JS -->
+    <!-- JS para buscador y validación de fechas -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const debut = document.getElementById('date_debut');
+            const fin = document.getElementById('date_fin');
+
+            function ajusterMinMax() {
+                if (debut.value) {
+                    fin.min = debut.value;
+                    if (fin.value && fin.value < debut.value) fin.value = debut.value;
+                }
+                if (fin.value) {
+                    debut.max = fin.value;
+                    if (debut.value && debut.value > fin.value) debut.value = fin.value;
+                }
+            }
+
+            debut.addEventListener('change', ajusterMinMax);
+            fin.addEventListener('change', ajusterMinMax);
+            ajusterMinMax();
+
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 searchInput.addEventListener('keyup', function () {
