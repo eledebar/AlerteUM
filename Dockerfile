@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
     libpng-dev \
@@ -7,24 +7,21 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    curl \
     git \
+    curl \
     libzip-dev \
     libpq-dev \
-    default-mysql-client \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl
+    && docker-php-ext-install pdo pdo_mysql zip
+
+COPY . /var/www/html
+
+WORKDIR /var/www/html
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-WORKDIR /var/www
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
-COPY . .
+CMD bash -c "sleep 10 && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
-RUN composer install --no-dev --optimize-autoloader
-
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
-
-EXPOSE 8000
-
-CMD bash -c 'until mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent; do echo "Esperando MySQL..."; sleep 2; done && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000'
