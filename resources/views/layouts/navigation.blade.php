@@ -2,7 +2,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
 
-            <!-- Logo + Titre -->
             <div class="flex items-center space-x-3">
                 <a href="{{ route('utilisateur.home') }}" class="flex items-center space-x-2">
                     <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
@@ -10,7 +9,6 @@
                 </a>
             </div>
 
-            <!-- Navigation centrale -->
             <div class="hidden sm:flex space-x-8">
                 @auth
                     @if(auth()->user()->estAdmin())
@@ -22,30 +20,22 @@
                             {{ __('Incidents') }}
                         </x-nav-link>
                     @elseif(auth()->user()->estUtilisateur())
-                    {{-- HOME del utilisateur --}}
 <x-nav-link :href="route('utilisateur.home')" :active="request()->routeIs('utilisateur.home')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
     {{ __('Accueil') }}
 </x-nav-link>
 
-                        {{-- CATÁLOGO primero --}}
                         <x-nav-link :href="route('utilisateur.incidents.categories')" :active="request()->routeIs('utilisateur.incidents.categories') || request()->routeIs('utilisateur.incidents.create')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {{ __('Catalogue des incidents') }}
                         </x-nav-link>
 
-                        {{-- Luego INCIDENCIAS --}}
                         <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {{ __('Mes Incidents') }}
                         </x-nav-link>
 
-                        {{-- Y por último el DASHBOARD --}}
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {{ __('Tableau de bord') }}
                         </x-nav-link>
                     @endif
                 @endauth
             </div>
 
-            <!-- Notifications + Utilisateur -->
             <div class="flex items-center space-x-4">
                 @auth
                     @php
@@ -67,7 +57,6 @@
                         @endif
                     </a>
 
-                    <!-- Dropdown -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center font-medium text-sm text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">

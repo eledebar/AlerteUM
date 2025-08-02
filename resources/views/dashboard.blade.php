@@ -6,7 +6,6 @@
     <div class="py-10 bg-gray-50 dark:bg-gray-900 space-y-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
-            <!-- Filtres -->
             <form method="GET" class="flex flex-wrap gap-4 items-center">
                 <label for="assigned" class="text-gray-700 dark:text-white">Assignés :</label>
                 <select name="assigned" id="assigned" class="px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
@@ -24,7 +23,6 @@
                 <button type="button" onclick="exportAllCharts()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Exporter Graphiques</button>
             </form>
 
-            <!-- Résumé -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-yellow-100 dark:bg-yellow-300/20 p-6 rounded text-center shadow">
                     <h3 class="text-gray-700 dark:text-yellow-300">Nouveaux</h3>
@@ -40,7 +38,6 @@
                 </div>
             </div>
 
-            <!-- Sélecteur de type de graphique -->
             <div class="flex items-center gap-4">
                 <label for="chartType" class="text-gray-700 dark:text-white">Type de graphique :</label>
                 <select id="chartType" onchange="updateAllCharts()" class="px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
@@ -51,7 +48,6 @@
                 </select>
             </div>
 
-            <!-- Graphiques -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-10">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Incidents par statut</h3>
@@ -78,7 +74,6 @@
         </div>
     </div>
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const statutLabels = ['Nouveaux', 'En cours', 'Résolus'];
@@ -190,7 +185,6 @@
             });
         }
 
-        // Validación de fechas
         const from = document.getElementById('from');
         const to = document.getElementById('to');
 

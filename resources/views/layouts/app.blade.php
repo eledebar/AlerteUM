@@ -80,7 +80,6 @@
 
     <div x-show="true" x-cloak>
         <div class="min-h-screen">
-            {{-- Barra de navegación --}}
             @include('layouts.navigation')
 
             @isset($header)
@@ -91,7 +90,6 @@
                 </header>
             @endisset
 
-            {{-- Contenido principal --}}
             <main class="py-6">
                 {{ $slot }}
             </main>
