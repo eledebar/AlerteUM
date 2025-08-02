@@ -1,53 +1,59 @@
-# Étape 1 : Construire l'application avec PHP et Composer
-FROM php:8.2-cli AS build
+FROM composer:latest AS vendor
 
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
+WORKDIR /app
+
+COPY . /app
+
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+
+FROM php:8.2-cli-alpine
+
+RUN apk add --no-cache \
+    php82-pdo \
+    php82-pdo_mysql \
+    php82-mbstring \
+    php82-tokenizer \
+    php82-xml \
+    php82-ctype \
+    php82-curl \
+    php82-dom \
+    php82-fileinfo \
+    php82-openssl \
+    php82-json \
+    php82-phar \
+    php82-posix \
+    php82-zlib \
+    php82-mysqli \
+    php82-session \
+    php82-simplexml \
+    php82-xmlwriter \
+    php82-mbstring \
+    php82-bcmath \
+    php82-gd \
+    php82-intl \
+    php82-pecl-redis \
+    php82-pcntl \
+    php82-opcache \
+    curl \
     unzip \
     git \
-    curl \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    && docker-php-ext-install pdo_mysql zip
+    supervisor \
+    bash \
+    mysql-client
 
-# Installer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Copier les fichiers du projet
-WORKDIR /app
-COPY . .
-
-# Installer les dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader
-
-# Étape 2 : Exécuter l'application
-FROM php:8.2-cli
-
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    && docker-php-ext-install pdo_mysql zip
-
-# Copier l'application depuis le build précédent
-COPY --from=build /app /app
-
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Définir les variables d'environnement
-ENV PORT=8080
+COPY --from=vendor /app /app
+COPY . /app
+
+RUN chmod -R 755 /app \
+ && chown -R www-data:www-data /app
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV APP_ENV=production
+
 EXPOSE 8080
 
-# Donner les bons droits
-RUN chmod -R 755 /app
-
-# Lancer les migrations et le serveur Laravel
-CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT}
+CMD php artisan config:clear \
+ && php artisan migrate:fresh --seed --force \
+ && php artisan serve --host=0.0.0.0 --port=8080
