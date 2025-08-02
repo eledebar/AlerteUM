@@ -5,9 +5,9 @@
         </h2>
     </x-slot>
 
-    <div class="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="mb-4 flex flex-wrap gap-4">
-            <a href="{{ route('utilisateur.incidents.create') }}" class="bg-violet-600 text-white px-4 py-2 rounded hover:bg-violet-700 transition">
+    <div class="bg-white dark:bg-gray-900 p-6 rounded shadow mt-4">
+        <div class="mb-6 flex flex-wrap gap-4">
+            <a href="{{ route('utilisateur.incidents.categories') }}" class="bg-violet-600 text-white px-4 py-2 rounded hover:bg-violet-700 transition">
                 + Signaler un incident
             </a>
 
@@ -59,50 +59,52 @@
             </div>
         @endif
 
-        <table class="min-w-full bg-white dark:bg-gray-800 shadow-md rounded text-gray-900 dark:text-gray-100" id="incidentTable">
-            <thead>
-            <tr>
-                <th class="px-6 py-3 text-left font-bold">Titre</th>
-                <th class="px-6 py-3 text-left font-bold">Statut</th>
-                <th class="px-6 py-3 text-left font-bold">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse ($incidents as $incident)
-                <tr class="border-b border-gray-200 dark:border-gray-700">
-                    <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
-                    <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center justify-start gap-2">
-                            <a href="{{ route('utilisateur.incidents.show', $incident) }}"
-                               class="w-8 h-8 transition-transform transform hover:scale-110">
-                                <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
-                            </a>
-                            @if ($incident->statut === 'nouveau')
-                                <a href="{{ route('utilisateur.incidents.edit', $incident) }}"
+        <div class="overflow-x-auto rounded shadow-md">
+            <table class="min-w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left font-bold">Titre</th>
+                        <th class="px-6 py-3 text-left font-bold">Statut</th>
+                        <th class="px-6 py-3 text-left font-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse ($incidents as $incident)
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <td class="px-6 py-4 incident-title">{{ $incident->titre }}</td>
+                        <td class="px-6 py-4 capitalize incident-statut">{{ str_replace('_', ' ', ucfirst($incident->statut)) }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-start gap-2">
+                                <a href="{{ route('utilisateur.incidents.show', $incident) }}"
                                    class="w-8 h-8 transition-transform transform hover:scale-110">
-                                    <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
+                                    <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
                                 </a>
-                                <form action="{{ route('utilisateur.incidents.destroy', $incident) }}" method="POST"
-                                      onsubmit="return confirm('Supprimer cet incident ?')"
-                                      class="w-8 h-8 transition-transform transform hover:scale-110">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full h-full">
-                                        <img src="{{ asset('delete.webp') }}" alt="Supprimer" class="w-full h-full object-contain rounded" />
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
+                                @if ($incident->statut === 'nouveau')
+                                    <a href="{{ route('utilisateur.incidents.edit', $incident) }}"
+                                       class="w-8 h-8 transition-transform transform hover:scale-110">
+                                        <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
+                                    </a>
+                                    <form action="{{ route('utilisateur.incidents.destroy', $incident) }}" method="POST"
+                                          onsubmit="return confirm('Supprimer cet incident ?')"
+                                          class="w-8 h-8 transition-transform transform hover:scale-110">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full h-full">
+                                            <img src="{{ asset('delete.webp') }}" alt="Supprimer" class="w-full h-full object-contain rounded" />
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">Aucun incident trouvé.</td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
 
         <div class="mt-6">
             {{ $incidents->appends(request()->all())->links() }}

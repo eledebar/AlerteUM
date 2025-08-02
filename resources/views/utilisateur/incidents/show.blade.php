@@ -45,7 +45,7 @@
                                     {{ $commentaire->auteur->name ?? 'Utilisateur inconnu' }} - 
                                     <span class="text-xs text-gray-500">{{ $commentaire->created_at->format('d/m/Y H:i') }}</span>
                                 </div>
-                                <div>{{ $commentaire->contenu }}</div>
+<div>{{ $commentaire->commentaire }}</div>
                             </li>
                         @endforeach
                     </ul>

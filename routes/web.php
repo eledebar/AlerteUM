@@ -50,6 +50,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::get('/dashboard/export/csv', [DashboardController::class, 'exportCsv'])->name('dashboard.exportCsv');
+
 });
 
 require __DIR__.'/auth.php';
