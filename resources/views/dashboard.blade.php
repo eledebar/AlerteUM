@@ -5,23 +5,46 @@
 
     <div class="py-10 bg-gray-50 dark:bg-gray-900 space-y-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+<form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    @if(auth()->user()->estAdmin())
+    <div class="flex flex-col">
+        <label for="assigned" class="text-gray-700 dark:text-white">Assignés :</label>
+        <select name="assigned" id="assigned"
+                class="mt-1 px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
+            <option value="">Tous</option>
+            <option value="me" {{ request('assigned') == 'me' ? 'selected' : '' }}>Moi</option>
+        </select>
+    </div>
+@endif
 
-            <form method="GET" class="flex flex-wrap gap-4 items-center">
-                <label for="assigned" class="text-gray-700 dark:text-white">Assignés :</label>
-                <select name="assigned" id="assigned" class="px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
-                    <option value="">Tous</option>
-                    <option value="me" {{ request('assigned') == 'me' ? 'selected' : '' }}>Moi</option>
-                </select>
+    <div class="flex flex-col">
+        <label for="from" class="text-gray-700 dark:text-white">Du :</label>
+        <input type="date" name="from" id="from" value="{{ request('from') }}"
+               class="mt-1 px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
+    </div>
 
-                <label for="from" class="text-gray-700 dark:text-white">Du :</label>
-                <input type="date" name="from" id="from" value="{{ request('from') }}" class="px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
+    <div class="flex flex-col">
+        <label for="to" class="text-gray-700 dark:text-white">Au :</label>
+        <input type="date" name="to" id="to" value="{{ request('to') }}"
+               class="mt-1 px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
+    </div>
 
-                <label for="to" class="text-gray-700 dark:text-white">Au :</label>
-                <input type="date" name="to" id="to" value="{{ request('to') }}" class="px-3 py-2 rounded border dark:bg-gray-800 text-gray-900 dark:text-white">
+    <div class="flex flex-col justify-end">
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+            Appliquer
+        </button>
+    </div>
 
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Appliquer</button>
-                <button type="button" onclick="exportAllCharts()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Exporter Graphiques</button>
-            </form>
+    <div class="flex flex-col justify-end">
+        <button type="button" onclick="exportAllCharts()"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">
+            Exporter Graphiques
+        </button>
+    </div>
+</form>
+
+
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-yellow-100 dark:bg-yellow-300/20 p-6 rounded text-center shadow">
