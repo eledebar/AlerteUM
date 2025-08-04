@@ -1,37 +1,23 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-apache
 
-WORKDIR /var/www
+RUN apt-get update && apt-get install -y \
+    git unzip zip libzip-dev libpng-dev libonig-dev libxml2-dev \
+    libcurl4-openssl-dev libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql zip
 
-RUN apk add --no-cache \
-    bash \
-    curl \
-    git \
-    unzip \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev \
-    freetype-dev \
-    icu-dev \
-    zlib-dev \
-    oniguruma-dev \
-    mysql-client \
-    libzip-dev \
-    supervisor
-
-# Extensiones PHP necesarias
-RUN docker-php-ext-install pdo pdo_mysql intl mbstring zip exif pcntl
-
-# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY . .
+RUN a2enmod rewrite
 
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+COPY . /var/www/html
 
-RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-EXPOSE 8080
+WORKDIR /var/www/html
 
-CMD php artisan config:clear \
- && php artisan migrate:fresh --seed --force \
- && php artisan serve --host=0.0.0.0 --port=8080
+RUN composer install --optimize-autoloader --no-dev
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+EXPOSE 80
+CMD ["apache2-foreground"]
