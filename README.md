@@ -15,9 +15,33 @@
 
 ---
 
+## 📚 Table of Contents
+
+- [🇬🇧 English](#-english)
+  - [ Project Overview](#-project-overview)
+  - [ Key Features](#-key-features)
+  - [ Tech Stack](#️-tech-stack)
+  - [ Installation](#-installation)
+  - [ Roles & Permissions](#-roles--permissions)
+  - [ Security](#-security)
+  - [ License](#-license)
+
+- [🇫🇷 Français](#-français)
+  - [ Présentation du projet](#-présentation-du-projet)
+  - [ Fonctionnalités principales](#-fonctionnalités-principales)
+  - [ Stack technique](#️-stack-technique)
+  - [ Installation](#-installation-1)
+  - [ Rôles et permissions](#-rôles-et-permissions)
+  - [ Sécurité](#-sécurité)
+  - [ Licence](#-licence)
+
+---
+
 ## 🇬🇧 English
 
 ### 🎓 Project Overview
+...
+
 
 **AlerteUM** is a web application developed for the Université de Mbuji-Mayi (um.ac.cd) to help report and manage incidents related to the university’s website. Users can select problems from a categorized catalog, submit detailed reports, and track them via dedicated dashboards. The platform is designed with accessibility and user experience in mind.
 
