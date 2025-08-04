@@ -1,61 +1,160 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+<p align="left">
+  <img src="public/logo-um.webp" alt="Université de Mbuji-Mayi Logo" width="100" style="margin-right: 15px; vertical-align: middle;">
+  <strong style="font-size: 2em; vertical-align: middle;"></strong>
 </p>
 
-## About Laravel
+<p>
+  <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/accessibility-designed%20for%20all-blueviolet" alt="Accessibility Badge">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# AlerteUM
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📚 Table of Contents
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- [🇬🇧 English](#-english)
+  - [ Project Overview](#-project-overview)
+  - [ Key Features](#-key-features)
+  - [ Tech Stack](#️-tech-stack)
+  - [ Installation](#-installation)
+  - [ Roles & Permissions](#-roles--permissions)
+  - [ Security](#-security)
+  - [ License](#-license)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- [🇫🇷 Français](#-français)
+  - [ Présentation du projet](#-présentation-du-projet)
+  - [ Fonctionnalités principales](#-fonctionnalités-principales)
+  - [ Stack technique](#️-stack-technique)
+  - [ Installation](#-installation-1)
+  - [ Rôles et permissions](#-rôles-et-permissions)
+  - [ Sécurité](#-sécurité)
+  - [ Licence](#-licence)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🇬🇧 English
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 🎓 Project Overview
+...
 
-### Premium Partners
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**AlerteUM** is a web application developed for the Université de Mbuji-Mayi (um.ac.cd) to help report and manage incidents related to the university’s website. Users can select problems from a categorized catalog, submit detailed reports, and track them via dedicated dashboards. The platform is designed with accessibility and user experience in mind.
 
-## Contributing
+### ✨ Key Features
+- Category-based incident reporting
+- Real-time tracking of incidents
+- Dashboards for users and administrators
+- Notifications and internal comments
+- Accessible UI
+- CSV export
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 🛠️ Tech Stack
 
-## Code of Conduct
+- Laravel (PHP)
+- Blade + TailwindCSS
+- MySQL
+- Breeze, Vite, Role Middleware
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 🚀 Installation
 
-## Security Vulnerabilities
+#### Requirements
+- PHP >= 8.1
+- Composer
+- Node.js & NPM
+- MySQL
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### Steps
 
-## License
+```bash
+git clone https://github.com/your-username/alerteum.git
+cd alerteum
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+npm install && npm run dev
+php artisan serve
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 🔒 Roles & Permissions
+
+- **Users**: can create, view, edit, and delete their own incidents; track progress; receive notifications; access a full dashboard.
+- **Admins**: manage all reported incidents; assign them to other admins; change their status; access a global dashboard and receive notifications for all new reports.
+
+---
+
+
+## 🔐 Security
+
+If you find a security vulnerability, please contact the maintainer privately.
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+# 🇫🇷 Français
+
+### 🎓 Présentation du projet
+
+**AlerteUM** est une application web développée pour l’Université de Mbuji-Mayi (um.ac.cd). Elle permet de signaler, suivre et gérer les incidents liés au site web de l’université à partir d’un catalogue de catégories. Les utilisateurs accèdent à un tableau de bord dédié. L’interface a été pensée pour être accessible et intuitive.
+
+### ✨ Fonctionnalités principales
+- Signalement d’incidents par catégorie
+- Suivi en temps réel
+- Tableaux de bord utilisateurs et administrateurs
+- Notifications et commentaires internes
+- Interface accessible
+- Exportation CSV
+
+### 🛠️ Stack technique
+
+- Laravel (PHP)
+- Blade + TailwindCSS
+- MySQL
+- Breeze, Vite, middleware de rôles
+
+### 🚀 Installation
+
+#### Prérequis
+- PHP >= 8.1
+- Composer
+- Node.js & NPM
+- MySQL
+
+#### Étapes
+
+```bash
+git clone https://github.com/your-username/alerteum.git
+cd alerteum
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan db:seed
+npm install && npm run dev
+php artisan serve
+```
+
+### 🔒 Rôles et permissions
+
+- **Utilisateurs** : peuvent créer, consulter, modifier et supprimer leurs propres incidents ; suivre leur évolution ; recevoir des notifications ; accéder à un tableau de bord complet.
+- **Administrateurs** : peuvent gérer tous les incidents ; les assigner ; changer leur statut ; accéder à un tableau de bord global et recevoir les notifications des nouveaux signalements.
+
+---
+
+
+## 🔐 Sécurité
+
+En cas de faille de sécurité, veuillez contacter le mainteneur en privé.
+
+## 📄 Licence
+
+Ce projet est sous licence [MIT](LICENSE).
