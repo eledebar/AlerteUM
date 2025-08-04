@@ -21,6 +21,7 @@ WORKDIR /var/www/html
 
 RUN composer install --optimize-autoloader --no-dev
 RUN npm install && npm run build
+RUN php artisan config:cache
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 CMD php artisan migrate --force && apache2-foreground
