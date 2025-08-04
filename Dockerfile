@@ -18,9 +18,5 @@ WORKDIR /var/www/html
 
 RUN composer install --optimize-autoloader --no-dev
 RUN chown -R www-data:www-data storage bootstrap/cache
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan migrate --force
 
-EXPOSE 80
-CMD ["apache2-foreground"]
+CMD php artisan migrate --force && apache2-foreground
