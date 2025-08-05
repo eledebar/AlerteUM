@@ -10,10 +10,20 @@
             <a href="{{ route('admin.incidents.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-center">
                 + Nouvel incident
             </a>
-            <a href="{{ route('admin.incidents.export.csv', request()->only(['statut', 'assigne_a_moi', 'date_debut', 'date_fin'])) }}"
-               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-center">
-                ⬇️ Exporter en CSV
-            </a>
+            @php
+    $query = http_build_query([
+        'statut' => request('statut'),
+        'assigne_a_moi' => request()->boolean('assigne_a_moi') ? 1 : null,
+        'date_debut' => request('date_debut'),
+        'date_fin' => request('date_fin'),
+    ]);
+@endphp
+
+<a href="{{ route('admin.incidents.export.csv') . '?' . $query }}"
+   class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-center">
+    ⬇️ Exporter en CSV
+</a>
+
         </div>
 
         <form method="GET" class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

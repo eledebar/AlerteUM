@@ -10,10 +10,20 @@
             <a href="{{ route('utilisateur.incidents.categories') }}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition text-center">
                 + Signaler un incident
             </a>
-            <a href="{{ route('utilisateur.incidents.export.csv', request()->only(['statut', 'date_debut', 'date_fin'])) }}"
-               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-center">
-                ⬇️ Exporter en CSV
-            </a>
+           @php
+    $query = http_build_query([
+        'statut' => request('statut'),
+        'date_debut' => request('date_debut'),
+        'date_fin' => request('date_fin'),
+    ]);
+@endphp
+
+<a href="{{ route('utilisateur.incidents.export.csv') . '?' . $query }}"
+   class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-center">
+    ⬇️ Exporter en CSV
+</a>
+
+
         </div>
 
         <form method="GET" class="mb-6 flex flex-col lg:flex-row lg:items-end gap-4">
