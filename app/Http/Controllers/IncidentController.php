@@ -108,44 +108,46 @@ class IncidentController extends Controller
     }
 
     public function create(Request $request)
-    {
-        $categorie = $request->input('categorie');
+{
 
-        $types = match ($categorie) {
-            'communication' => [
-                'Messagerie' => "Difficultés d'accès ou d'envoi/réception via la messagerie institutionnelle...",
-                'Outils collaboratifs' => "Problème avec des outils collaboratifs tels que le drive partagé...",
-            ],
-            'acces' => [
-                'Connexion Internet' => "Accès limité ou inexistant au réseau câblé ou Wi-Fi...",
-                'Problèmes de mot de passe' => "Connexion impossible à cause d’un mot de passe oublié ou erroné...",
-            ],
-            'plateformes' => [
-                'Formulaires en ligne' => "Erreur lors de la soumission ou de l'affichage de formulaires...",
-                'Sites web universitaires' => "Site web inaccessible ou éléments non fonctionnels...",
-            ],
-            'equipements' => [
-                'Matériel défectueux' => "Problème matériel (ordinateur, imprimante...)",
-                'Logiciels manquants' => "Un logiciel requis est absent de votre poste...",
-                'Problème de licence' => "Un logiciel signale un problème de licence...",
-            ],
-            'enseignement' => [
-                'Équipements de labo' => "Défaillance d’un appareil dans un laboratoire ou atelier...",
-                'Accès à bases de données' => "Impossibilité d’accès à des ressources scientifiques...",
-            ],
-            'assistance' => [
-                'Demande d’assistance' => "Vous avez besoin d’une aide pour une tâche numérique...",
-                'Orientation numérique' => "Demande d’accompagnement pour l’utilisation des outils numériques...",
-                'Autres demandes' => "Votre demande ne correspond à aucune catégorie listée...",
-            ],
-            default => [],
-        };
+    $categorie = $request->input('categorie');
 
-        return view('utilisateur.incidents.create', [
-            'categorie' => $categorie,
-            'types' => $types,
-        ]);
-    }
+    $types = match ($categorie) {
+        'communication' => [
+            'Messagerie' => "Vous rencontrez des difficultés avec la messagerie institutionnelle (problèmes d'envoi, de réception, d'accès ou de configuration). Veuillez préciser le type de problème rencontré, la plateforme utilisée (web, application, etc.) et indiquer votre adresse e-mail institutionnelle.",
+            'Outils collaboratifs' => "Problèmes liés à l'utilisation d'outils collaboratifs tels que les drives partagés, calendriers ou plateformes de travail en équipe. Merci d’indiquer l’outil concerné, la nature du problème (accès, partage, synchronisation...) et si d’autres utilisateurs sont également impactés.",
+        ],
+        'acces' => [
+            'Connexion Internet' => "Connexion Internet absente, instable ou très lente via le réseau Wi-Fi ou filaire de l’établissement. Merci de préciser l’endroit où le problème survient (bâtiment, salle...), l’appareil utilisé et les horaires approximatifs où la déconnexion se produit.",
+            'Problèmes de mot de passe' => "Vous ne parvenez pas à accéder à un service en raison d’un mot de passe oublié, erroné ou expiré. Veuillez indiquer le service concerné (ENT, messagerie, plateforme...) et si vous avez déjà tenté de réinitialiser le mot de passe. N'oubliez pas d'indiquer votre identifiant universitaire si possible.",
+        ],
+        'plateformes' => [
+            'Formulaires en ligne' => "Vous rencontrez une erreur lors de l’affichage ou de la soumission d’un formulaire en ligne (champs inactifs, validation impossible, données perdues...). Merci d’indiquer le lien du formulaire, le service concerné et le moment où l’erreur est apparue.",
+            'Sites web universitaires' => "L’un des sites web universitaires est inaccessible ou certaines de ses fonctionnalités ne répondent pas. Veuillez indiquer l’URL concernée, ce que vous essayiez de faire et le type d'appareil utilisé (ordinateur, smartphone, etc.).",
+        ],
+        'equipements' => [
+            'Matériel défectueux' => "Un appareil (ordinateur, imprimante, projecteur...) est en panne ou ne fonctionne pas correctement. Merci d’indiquer le type de matériel, son emplacement (salle, bâtiment...), les symptômes du dysfonctionnement et si des tentatives de redémarrage ont été faites.",
+            'Logiciels manquants' => "Un logiciel nécessaire à votre activité n’est pas installé sur votre poste. Merci d’indiquer le nom exact du logiciel, son utilisation prévue et le type de poste concerné (fixe, portable, usage personnel ou partagé).",
+            'Problème de licence' => "Un logiciel indique un problème de licence (activation échouée, licence expirée ou invalide). Merci de préciser le nom du logiciel, le message d’erreur reçu et l’impact sur votre activité (utilisation partielle ou impossible).",
+        ],
+        'enseignement' => [
+            'Équipements de labo' => "Un équipement présent dans un laboratoire ou un atelier ne fonctionne pas ou nécessite une intervention technique. Merci d’indiquer le nom de l’appareil, son emplacement et en quoi cela empêche la réalisation des activités pédagogiques.",
+            'Accès à bases de données' => "Vous ne parvenez pas à accéder à des bases de données ou des ressources scientifiques en ligne. Veuillez indiquer le nom de la ressource, la méthode d’accès utilisée (via ENT, VPN, etc.) et si le problème est constant ou intermittent.",
+        ],
+        'assistance' => [
+            'Demande d’assistance' => "Vous souhaitez être aidé(e) pour accomplir une tâche numérique précise (utilisation d’un outil, configuration d’un service, résolution d’un problème technique...). Merci de décrire votre besoin et le contexte d’utilisation.",
+            'Orientation numérique' => "Vous demandez un accompagnement ou une formation pour mieux utiliser les outils numériques de l’établissement. Merci d’indiquer les outils concernés, votre rôle dans l’établissement (étudiant, enseignant, personnel...) et vos attentes.",
+            'Autres demandes' => "Votre demande ne correspond à aucune des catégories précédentes mais concerne un service ou outil numérique. Merci de décrire clairement votre situation, le besoin identifié et d’indiquer vos coordonnées de contact (email, rôle, etc.).",
+        ],
+        
+        default => [],
+    };
+
+    return view('utilisateur.incidents.create', [
+        'categorie' => $categorie,
+        'types' => $types,
+    ]);
+}
 
     public function store(Request $request)
     {
