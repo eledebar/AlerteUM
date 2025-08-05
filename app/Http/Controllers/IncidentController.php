@@ -60,53 +60,53 @@ class IncidentController extends Controller
     }
 
     public function exportCsv(Request $request)
-    {
-        $user = Auth::user();
-        $query = Incident::where('utilisateur_id', $user->id)->latest();
+{
+    $user = Auth::user();
 
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-        if ($request->filled('titre')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('titre', 'like', '%' . $request->titre . '%')
-                  ->orWhere('statut', 'like', '%' . $request->titre . '%');
-            });
-        }
-        if ($request->filled('date_debut')) {
-            $query->whereDate('created_at', '>=', $request->date_debut);
-        }
-        if ($request->filled('date_fin')) {
-            $query->whereDate('created_at', '<=', $request->date_fin);
-        }
+    $query = Incident::where('utilisateur_id', $user->id)->latest();
 
-        $incidents = $query->get();
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
-        ];
-
-        $callback = function () use ($incidents) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
-            foreach ($incidents as $incident) {
-                fputcsv($handle, [
-                    $incident->id,
-                    $incident->titre,
-                    $incident->statut,
-                    $incident->type,
-                ]);
-            }
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+    if ($request->filled('statut')) {
+        $query->where('statut', $request->statut);
+    }
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+    if ($request->filled('titre')) {
+        $query->where(function ($q) use ($request) {
+            $q->where('titre', 'like', '%' . $request->titre . '%')
+              ->orWhere('statut', 'like', '%' . $request->titre . '%');
+        });
+    }
+    if ($request->filled('date_debut')) {
+        $query->whereDate('created_at', '>=', $request->date_debut);
+    }
+    if ($request->filled('date_fin')) {
+        $query->whereDate('created_at', '<=', $request->date_fin);
     }
 
+    $incidents = $query->get();
+
+    $handle = fopen('php://temp', 'r+');
+    fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
+
+    foreach ($incidents as $incident) {
+        fputcsv($handle, [
+            $incident->id,
+            $incident->titre,
+            $incident->statut,
+            $incident->type,
+        ]);
+    }
+
+    rewind($handle);
+    $csv = stream_get_contents($handle);
+    fclose($handle);
+
+    return response($csv, 200, [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
+    ]);
+}
     public function create(Request $request)
 {
 
