@@ -3,7 +3,7 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     git unzip zip curl gnupg libzip-dev libpng-dev libonig-dev libxml2-dev \
     libcurl4-openssl-dev libpq-dev nodejs npm \
-    && docker-php-ext-install pdo pdo_pgsql zip
+    && docker-php-ext-install pdo pdo_mysql zip
 
 RUN a2enmod rewrite
 
@@ -20,6 +20,4 @@ RUN composer install --optimize-autoloader --no-dev \
 
 RUN chown -R www-data:www-data storage bootstrap/cache public
 
-CMD php artisan config:clear && \
-    php artisan migrate:fresh --seed --force && \
-    apache2-foreground
+CMD php artisan migrate:fresh --seed --force && apache2-foreground
