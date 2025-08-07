@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
+use App\Http\Controllers\Controller;
 
 use App\Models\Incident;
 use App\Models\User;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class IncidentController extends Controller
+class UserIncidentController extends Controller
 {
     use AuthorizesRequests;
 
@@ -19,7 +20,7 @@ class IncidentController extends Controller
     {
         $user = Auth::user();
 
-        $query = $user->estAdmin()
+        $query = $user->estResolveur()
             ? Incident::with(['utilisateur', 'gestionnaire'])->latest()
             : Incident::where('utilisateur_id', $user->id)->latest();
 
@@ -27,11 +28,11 @@ class IncidentController extends Controller
             $query->where('statut', $request->statut);
         }
 
-        if ($user->estAdmin() && $request->boolean('assigne_a_moi')) {
+        if ($user->estResolveur() && $request->boolean('assigne_a_moi')) {
             $query->where('attribue_a', Auth::id());
         }
 
-        if (!$user->estAdmin()) {
+        if (!$user->estResolveur()) {
             if ($request->filled('type')) {
                 $query->where('type', $request->type);
             }
@@ -52,10 +53,10 @@ class IncidentController extends Controller
         }
 
         $incidents = $query->paginate(10);
-        $typesDisponibles = $user->estAdmin() ? [] : Incident::distinct()->pluck('type')->filter()->values();
+        $typesDisponibles = $user->estResolveur() ? [] : Incident::distinct()->pluck('type')->filter()->values();
 
-        return $user->estAdmin()
-            ? view('admin.incidents.index', compact('incidents'))
+        return $user->estResolveur()
+            ? view('resolveur.incidents.index', compact('incidents'))
             : view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
     }
 
@@ -151,7 +152,7 @@ class IncidentController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->estAdmin()) {
+        if (Auth::user()->estResolveur()) {
             $request->validate([
                 'titre' => 'required|string',
                 'description' => 'required|string',
@@ -167,7 +168,7 @@ class IncidentController extends Controller
                 'attribue_a' => $request->attribue_a,
             ]);
 
-            return redirect()->route('admin.incidents.index')->with('success', 'Incident créé avec succès.');
+            return redirect()->route('resolveur.incidents.index')->with('success', 'Incident créé avec succès.');
         }
 
         // Usuario normal
@@ -187,10 +188,10 @@ class IncidentController extends Controller
             'utilisateur_id' => Auth::id(),
         ]);
 
-        // 🔔 Notificar a todos los administradores
-        User::where('role', 'admin')->get()->each(function ($admin) use ($incident) {
-            $admin->notify(new NouvelleIncidentCree($incident));
-        });
+        // // 🔔 Notificar a todos los resolveur
+        // User::where('role', 'resolveur')->get()->each(function ($resolveur) use ($incident) {
+        //     $resolveur->notify(new NouvelleIncidentCree($incident));
+        // });
 
         return redirect()->route('utilisateur.incidents.show', $incident)->with('success', 'Incident créé avec succès.');
     }
@@ -199,10 +200,10 @@ class IncidentController extends Controller
     {
         $this->authorize('update', $incident);
 
-        if (Auth::user()->estAdmin()) {
+        if (Auth::user()->estResolveur()) {
             $incident->load(['utilisateur', 'commentaires.auteur']);
-            $admins = User::where('role', 'admin')->get();
-            return view('admin.incidents.edit', compact('incident', 'admins'));
+            $resolveurs = User::where('role', 'resolveur')->get();
+            return view('resolveur.incidents.edit', compact('incident', 'resolveurs'));
         }
 
         if ($incident->statut !== 'nouveau') {
@@ -216,7 +217,7 @@ class IncidentController extends Controller
     {
         $this->authorize('update', $incident);
 
-        if (Auth::user()->estAdmin()) {
+        if (Auth::user()->estResolveur()) {
             $request->validate([
                 'statut' => 'required|in:nouveau,en_cours,résolu',
                 'commentaire' => 'nullable|string',
@@ -242,7 +243,7 @@ class IncidentController extends Controller
                 ]);
             }
 
-            return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+            return redirect()->route('resolveur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
         }
 
         if ($incident->statut !== 'nouveau') {
@@ -272,7 +273,7 @@ class IncidentController extends Controller
 
         $incident->delete();
 
-        $route = Auth::user()->estAdmin() ? 'admin.incidents.index' : 'utilisateur.incidents.index';
+        $route = Auth::user()->estResolveur() ? 'resolveur.incidents.index' : 'utilisateur.incidents.index';
 
         return redirect()->route($route)->with('success', 'Incident supprimé avec succès.');
     }
@@ -281,14 +282,14 @@ class IncidentController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->estAdmin() && $incident->utilisateur_id !== $user->id) {
+        if (!$user->estResolveur() && $incident->utilisateur_id !== $user->id) {
             abort(403, 'Accès non autorisé.');
         }
 
         $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
 
-        return $user->estAdmin()
-            ? view('admin.incidents.show', compact('incident'))
+        return $user->estResolveur()
+            ? view('resolveur.incidents.show', compact('incident'))
             : view('utilisateur.incidents.show', compact('incident'));
     }
 }

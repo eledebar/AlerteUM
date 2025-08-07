@@ -28,7 +28,7 @@ class IncidentStatusChanged extends Notification
         return (new MailMessage)
                     ->subject("État de l'incident mis à jour")
                     ->line("L'état de votre incident '{$this->incident->titre}' a été mis à jour à : {$this->incident->statut}")
-                    ->action('Voir l’incident', route('admin.incidents.show', $this->incident))
+                    ->action('Voir l’incident', route('resolveur.incidents.show', $this->incident))
                     ->line('Merci de votre patience.');
     }
 

@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
     \Illuminate\Support\Facades\Redirect::macro('intended', function ($default = null) {
         $user = auth()->user();
 
-        if ($user?->role === 'admin') {
-            return redirect()->route('admin.incidents.index');
+        if ($user?->role === 'resolveur') {
+            return redirect()->route('resolveur.incidents.index');
         }
 
         if ($user?->role === 'utilisateur') {

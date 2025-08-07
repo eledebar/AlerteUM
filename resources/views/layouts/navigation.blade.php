@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center h-16">
 
             <div class="flex items-center space-x-3">
-                <a href="{{ auth()->user()?->estAdmin() ? route('dashboard') : route('utilisateur.home') }}" class="flex items-center space-x-2">
+                <a href="{{ auth()->user()?->estResolveur() ? route('dashboard') : route('utilisateur.home') }}" class="flex items-center space-x-2">
                     <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
                     <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">AlerteUM</span>
                 </a>
@@ -11,11 +11,11 @@
 
             <div class="hidden sm:flex space-x-8">
                 @auth
-                    @if(auth()->user()->estAdmin())
+                    @if(auth()->user()->estResolveur())
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.incidents.index')" :active="request()->routeIs('admin.incidents.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                        <x-nav-link :href="route('resolveur.incidents.index')" :active="request()->routeIs('resolveur.incidents.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Incidents') }}
                         </x-nav-link>
                     @elseif(auth()->user()->estUtilisateur())
@@ -38,7 +38,7 @@
             <div class="flex items-center space-x-4">
                 @auth
                     @php
-                        $prefix = auth()->user()->estAdmin() ? 'admin.' : 'utilisateur.';
+                        $prefix = auth()->user()->estResolveur() ? 'resolveur.' : 'utilisateur.';
                     @endphp
 
                     <a href="{{ route($prefix . 'notifications.index') }}" class="relative text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
@@ -119,11 +119,11 @@
         <div class="sm:hidden mt-2 px-4" x-show="open" x-cloak>
             <div class="flex flex-col space-y-2">
                 @auth
-                    @if(auth()->user()->estAdmin())
+                    @if(auth()->user()->estResolveur())
                         <x-nav-link :href="route('dashboard')" class="block">
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.incidents.index')" class="block">
+                        <x-nav-link :href="route('resolveur.incidents.index')" class="block">
                             {{ __('Incidents') }}
                         </x-nav-link>
                     @elseif(auth()->user()->estUtilisateur())

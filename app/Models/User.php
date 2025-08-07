@@ -33,10 +33,10 @@ class User extends Authenticatable
         return $this->hasMany(Incident::class, 'utilisateur_id');
     }
 
-    
-    public function estAdmin(): bool
+
+    public function estResolveur(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'resolveur';
     }
 
     public function estUtilisateur(): bool

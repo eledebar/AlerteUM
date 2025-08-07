@@ -20,8 +20,7 @@
                 <textarea name="description" class="w-full border px-4 py-2" rows="5" required>{{ $incident->description }}</textarea>
             </div>
 
-            {{-- Solo mostrar el campo de estado si es admin --}}
-            @if (auth()->user()->estAdmin())
+            @if (auth()->user()->estResolveur())
                 <div class="mb-4">
                     <label class="block font-medium">Statut</label>
                     <select name="statut" class="w-full border px-4 py-2" required>

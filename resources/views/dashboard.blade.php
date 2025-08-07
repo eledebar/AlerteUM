@@ -6,7 +6,7 @@
     <div class="py-10 bg-gray-50 dark:bg-gray-900 space-y-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-    @if(auth()->user()->estAdmin())
+    @if(auth()->user()->estResolveur())
     <div class="flex flex-col">
         <label for="assigned" class="text-gray-700 dark:text-white">Assignés :</label>
         <select name="assigned" id="assigned"
@@ -87,7 +87,7 @@
                     <canvas id="dateChart" class="w-full max-h-[350px]"></canvas>
                 </div>
 
-                @if(auth()->user()->estAdmin())
+                @if(auth()->user()->estResolveur())
                     <div>
                         <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Répartition par utilisateur</h3>
                         <canvas id="userChart" class="w-full max-h-[350px]"></canvas>
@@ -194,7 +194,7 @@
                 }
             }
 
-            @if(auth()->user()->estAdmin())
+            @if(auth()->user()->estResolveur())
                 createChart('userChart', userLabels, userData, type);
             @endif
         }

@@ -20,7 +20,7 @@ class DashboardController extends Controller
 
         $isValidDateRange = $dateFrom && $dateTo && strtotime($dateFrom) <= strtotime($dateTo);
 
-        if ($user->estAdmin()) {
+        if ($user->estResolveur()) {
             $query = Incident::query();
 
             if ($filtreAssigne) {
@@ -58,7 +58,7 @@ class DashboardController extends Controller
             ->orderBy('date')
             ->get();
 
-        $parUtilisateur = $user->estAdmin() ? (clone $query)
+        $parUtilisateur = $user->estResolveur() ? (clone $query)
             ->select('attribue_a', DB::raw('count(*) as total'))
             ->whereNotNull('attribue_a')
             ->groupBy('attribue_a')
@@ -84,7 +84,7 @@ class DashboardController extends Controller
     public function exportCsv(Request $request)
     {
         $user = Auth::user();
-        $query = $user->estAdmin() ? Incident::query() : $user->incidents();
+        $query = $user->estResolveur() ? Incident::query() : $user->incidents();
 
         if ($request->query('assigned') === 'me') {
             $query->where('attribue_a', $user->id);

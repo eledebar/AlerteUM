@@ -24,7 +24,7 @@
                           rows="5" required>{{ $incident->description }}</textarea>
             </div>
 
-            @if (auth()->user()->estAdmin())
+            @if (auth()->user()->estResolveur())
                 <div class="mb-4">
                     <label class="block font-medium text-gray-800 dark:text-gray-200">Statut</label>
                     <select name="statut" id="statut"

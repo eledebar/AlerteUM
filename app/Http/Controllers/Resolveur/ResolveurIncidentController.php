@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Resolveur;
 
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\IncidentStatutUpdated;
 
-class IncidentController extends Controller
+class ResolveurIncidentController extends Controller
 {
     public function index(Request $request)
     {
@@ -34,13 +34,13 @@ class IncidentController extends Controller
 
         $incidents = $query->paginate(10);
 
-        return view('admin.incidents.index', compact('incidents'));
+        return view('resolveur.incidents.index', compact('incidents'));
     }
 
     public function create()
     {
         $users = User::where('role', 'utilisateur')->get();
-        return view('admin.incidents.create', compact('users'));
+        return view('resolveur.incidents.create', compact('users'));
     }
 
     public function store(Request $request)
@@ -60,20 +60,20 @@ class IncidentController extends Controller
             'attribue_a' => $request->attribue_a,
         ]);
 
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident créé avec succès.');
+        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident créé avec succès.');
     }
 
     public function show(Incident $incident)
     {
         $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
-        return view('admin.incidents.show', compact('incident'));
+        return view('resolveur.incidents.show', compact('incident'));
     }
 
     public function edit(Incident $incident)
     {
-        $admins = User::where('role', 'admin')->get();
+        $resolveurs = User::where('role', 'resolveur')->get();
         $incident->load(['utilisateur', 'commentaires.auteur']);
-        return view('admin.incidents.edit', compact('incident', 'admins'));
+        return view('resolveur.incidents.edit', compact('incident', 'resolveurs'));
     }
 
     public function update(Request $request, Incident $incident)
@@ -103,13 +103,13 @@ class IncidentController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident mis à jour avec succès.');
+        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
     }
 
     public function destroy(Incident $incident)
     {
         $incident->delete();
-        return redirect()->route('admin.incidents.index')->with('success', 'Incident supprimé.');
+        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident supprimé.');
     }
 
     public function exportCsv(Request $request)
@@ -136,7 +136,7 @@ class IncidentController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="incidents_admin.csv"',
+            'Content-Disposition' => 'attachment; filename="incidents_resolveur.csv"',
         ];
 
         $callback = function () use ($incidents) {

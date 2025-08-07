@@ -69,7 +69,7 @@
                         <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    {{ $comment->auteur->name ?? 'Admin' }}
+                                    {{ $comment->auteur->name ?? 'resolveur' }}
                                 </span>
                                 <span class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ $comment->created_at->format('d/m/Y H:i') }}
@@ -83,7 +83,7 @@
 
             {{-- Bouton retour --}}
             <div>
-                <a href="{{ route('admin.incidents.index') }}"
+                <a href="{{ route('resolveur.incidents.index') }}"
                    class="inline-block bg-gray-700 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded transition">
                     ← Retour à la liste
                 </a>

@@ -7,7 +7,7 @@
 
     <div class="py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <a href="{{ route('admin.incidents.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-center">
+            <a href="{{ route('resolveur.incidents.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-center">
                 + Nouvel incident
             </a>
             @php
@@ -19,7 +19,7 @@
     ]);
 @endphp
 
-<a href="{{ route('admin.incidents.export.csv') . '?' . $query }}"
+<a href="{{ route('resolveur.incidents.export.csv') . '?' . $query }}"
    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-center">
     ⬇️ Exporter en CSV
 </a>
@@ -95,15 +95,15 @@
                         <td class="px-6 py-4 incident-gestionnaire">{{ $incident->gestionnaire?->name ?? '—' }}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-start gap-2">
-                                <a href="{{ route('admin.incidents.show', $incident) }}"
+                                <a href="{{ route('resolveur.incidents.show', $incident) }}"
                                    class="w-8 h-8 transition-transform transform hover:scale-110">
                                     <img src="{{ asset('eye.webp') }}" alt="Voir" class="w-full h-full object-contain rounded" />
                                 </a>
-                                <a href="{{ route('admin.incidents.edit', $incident) }}"
+                                <a href="{{ route('resolveur.incidents.edit', $incident) }}"
                                    class="w-8 h-8 transition-transform transform hover:scale-110">
                                     <img src="{{ asset('edit.webp') }}" alt="Modifier" class="w-full h-full object-contain rounded" />
                                 </a>
-                                <form action="{{ route('admin.incidents.destroy', $incident) }}" method="POST"
+                                <form action="{{ route('resolveur.incidents.destroy', $incident) }}" method="POST"
                                       onsubmit="return confirm('Supprimer cet incident ?')"
                                       class="w-8 h-8 transition-transform transform hover:scale-110">
                                     @csrf

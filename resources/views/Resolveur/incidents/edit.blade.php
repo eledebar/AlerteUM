@@ -8,7 +8,7 @@
     <div class="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-8">
-                <form method="POST" action="{{ route('admin.incidents.update', $incident) }}" id="adminIncidentForm">
+                <form method="POST" action="{{ route('resolveur.incidents.update', $incident) }}" id="resolveurIncidentForm">
                     @csrf
                     @method('PUT')
 
@@ -44,9 +44,9 @@
                         <select name="attribue_a" id="attribue_a"
                                 class="change-tracked w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg">
                             <option value="">— Aucun —</option>
-                            @foreach($admins as $admin)
-                                <option value="{{ $admin->id }}" @selected($incident->attribue_a == $admin->id)>
-                                    {{ $admin->name }}
+                            @foreach($resolveurs as $resolveur)
+                                <option value="{{ $resolveur->id }}" @selected($incident->attribue_a == $resolveur->id)>
+                                    {{ $resolveur->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -78,7 +78,7 @@
 
                     {{-- Botones --}}
                     <div class="flex justify-between">
-                        <a href="{{ route('admin.incidents.index') }}"
+                        <a href="{{ route('resolveur.incidents.index') }}"
                            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
                             ← Retour
                         </a>
@@ -95,7 +95,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('adminIncidentForm');
+            const form = document.getElementById('resolveurIncidentForm');
             const saveBtn = document.getElementById('saveBtn');
 
             const initialValues = {
