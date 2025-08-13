@@ -3,159 +3,162 @@
 namespace App\Http\Controllers\Resolveur;
 
 use App\Http\Controllers\Controller;
-use App\Models\Incident;
-use App\Models\User;
-use App\Models\IncidentComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\IncidentStatutUpdated;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Incident;
+use App\Models\User;
+use App\Models\IncidentLog;
 
 class ResolveurIncidentController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
+{
+    $user = Auth::user();
 
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
+    $perPage = (int) $request->integer('per_page', 10);
+    $perPage = in_array($perPage, [10, 15, 25, 50]) ? $perPage : 10;
 
-        if ($request->boolean('assigne_a_moi')) {
-            $query->where('attribue_a', Auth::id());
-        }
+    $incidents = Incident::query()
+        ->filter($request, $user)
+        ->sorted($request)
+        ->with(['assignedUser','lastLog'])   
+        ->paginate($perPage)
+        ->withQueryString();
 
-        if ($request->filled('date_debut')) {
-            $query->whereDate('created_at', '>=', $request->date_debut);
-        }
+    return view('resolveur.incidents.index', compact('incidents'));
+}
 
-        if ($request->filled('date_fin')) {
-            $query->whereDate('created_at', '<=', $request->date_fin);
-        }
-
-        $incidents = $query->paginate(10);
-
-        return view('resolveur.incidents.index', compact('incidents'));
-    }
-
-    public function create()
-    {
-        $users = User::where('role', 'utilisateur')->get();
-        return view('resolveur.incidents.create', compact('users'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'titre' => 'required|string',
-            'description' => 'required|string',
-            'utilisateur_id' => 'required|exists:users,id',
-            'attribue_a' => 'nullable|exists:users,id',
-        ]);
-
-        Incident::create([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'statut' => 'nouveau',
-            'utilisateur_id' => $request->utilisateur_id,
-            'attribue_a' => $request->attribue_a,
-        ]);
-
-        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident créé avec succès.');
-    }
 
     public function show(Incident $incident)
     {
-        $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
+        $incident->load(['assignedUser', 'logs', 'commentaires.auteur']);
+
         return view('resolveur.incidents.show', compact('incident'));
     }
 
     public function edit(Incident $incident)
     {
-        $resolveurs = User::where('role', 'resolveur')->get();
-        $incident->load(['utilisateur', 'commentaires.auteur']);
+        $incident->load(['assignedUser', 'logs', 'commentaires.auteur']);
+
+        $resolveurs = User::where('role', 'resolveur')
+            ->orderBy('name')
+            ->get(['id','name']);
+
         return view('resolveur.incidents.edit', compact('incident', 'resolveurs'));
     }
 
-    public function update(Request $request, Incident $incident)
+    public function setStatus(Request $request, Incident $incident)
     {
         $request->validate([
-            'statut' => 'required|in:nouveau,en_cours,résolu',
-            'commentaire' => 'nullable|string',
-            'attribue_a' => 'nullable|exists:users,id',
+            'statut' => 'required|string|in:nouveau,en_cours,résolu,fermé',
         ]);
 
-        $ancienStatut = $incident->statut;
+        $incident->setStatusWithLog($request->statut);
 
-        $incident->update([
-            'statut' => $request->statut,
-            'attribue_a' => $request->attribue_a,
+        return back()->with('success', 'Statut mis à jour.');
+    }
+
+    public function setPriority(Request $request, Incident $incident)
+    {
+        $request->validate([
+            'priority' => 'required|in:low,medium,high,critical',
         ]);
 
-        if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
-            $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
+        $incident->priority = $request->priority;
+
+        if (Schema::hasColumn('incidents', 'priorite')) {
+            $incident->priorite = ucfirst($request->priority);
         }
 
-        if ($request->filled('commentaire')) {
-            IncidentComment::create([
+        if (Schema::hasColumn('incidents', 'sla_due_at')) {
+            $hours = (int) config('itil.sla_hours.' . $incident->priority, 48);
+            $incident->sla_due_at = now()->addHours($hours);
+        }
+
+        $incident->save();
+
+        IncidentLog::create([
+            'incident_id' => $incident->id,
+            'user_id'     => Auth::id(),
+            'action'      => 'priority_changed',
+            'details'     => 'Priorité: ' . ($incident->priorite ?? $incident->priority),
+        ]);
+
+        return back()->with('success', 'Priorité mise à jour.');
+    }
+
+  
+    public function escalate(Request $request, Incident $incident)
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->role === 'resolveur', 403);
+
+        $request->validate([
+            'to_resolveur_id' => ['required','integer','exists:users,id'],
+        ]);
+
+        $to = User::where('id', $request->integer('to_resolveur_id'))
+            ->where('role', 'resolveur')
+            ->first();
+
+        if (! $to) {
+            return back()->withErrors(['to_resolveur_id' => 'Le destinataire doit être un résolveur valide.']);
+        }
+
+        if ((int) $incident->attribue_a === (int) $to->id) {
+            return back()->with('success', 'Incident déjà assigné à ce résolveur.');
+        }
+
+        $fromUser = $incident->assignedUser; 
+        $fromName = $fromUser?->name ?? 'Non assigné';
+
+        $incident->attribue_a = $to->id;
+
+        if (Schema::hasColumn('incidents', 'escalation_level')) {
+            $incident->escalation_level = (int) ($incident->escalation_level ?? 0) + 1;
+        }
+
+        $statutNouveau = defined(Incident::class.'::STATUT_NOUVEAU') ? Incident::STATUT_NOUVEAU : 'nouveau';
+        $statutEnCours = defined(Incident::class.'::STATUT_EN_COURS') ? Incident::STATUT_EN_COURS : 'en_cours';
+        if (($incident->statut ?? null) === $statutNouveau) {
+            $incident->statut = $statutEnCours;
+        }
+
+        $incident->save();
+
+        IncidentLog::create([
+            'incident_id' => $incident->id,
+            'user_id'     => $user->id,
+            'action'      => 'escalated',
+            'details'     => sprintf('Réassigné de %s à %s', $fromName, $to->name),
+        ]);
+
+        return back()->with('success', 'Incident réassigné à ' . $to->name . '.');
+    }
+
+   
+    public function comment(Request $request, Incident $incident)
+    {
+        $request->validate([
+            'commentaire' => ['required','string','max:5000'],
+        ]);
+
+        if (class_exists(\App\Models\IncidentComment::class)) {
+            \App\Models\IncidentComment::create([
                 'incident_id' => $incident->id,
-                'user_id' => Auth::id(),
+                'user_id'     => Auth::id(),
                 'commentaire' => $request->commentaire,
+            ]);
+        } else {
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'comment',
+                'details'     => $request->commentaire,
             ]);
         }
 
-        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
-    }
-
-    public function destroy(Incident $incident)
-    {
-        $incident->delete();
-        return redirect()->route('resolveur.incidents.index')->with('success', 'Incident supprimé.');
-    }
-
-    public function exportCsv(Request $request)
-    {
-        $query = Incident::with(['utilisateur', 'gestionnaire'])->latest();
-
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
-
-        if ($request->boolean('assigne_a_moi')) {
-            $query->where('attribue_a', Auth::id());
-        }
-
-        if ($request->filled('date_debut')) {
-            $query->whereDate('created_at', '>=', $request->date_debut);
-        }
-
-        if ($request->filled('date_fin')) {
-            $query->whereDate('created_at', '<=', $request->date_fin);
-        }
-
-        $incidents = $query->get();
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="incidents_resolveur.csv"',
-        ];
-
-        $callback = function () use ($incidents) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Titre', 'Statut', 'Utilisateur', 'Gestionnaire']);
-
-            foreach ($incidents as $incident) {
-                fputcsv($handle, [
-                    $incident->id,
-                    $incident->titre,
-                    $incident->statut,
-                    $incident->utilisateur?->name,
-                    $incident->gestionnaire?->name,
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return back()->with('success', 'Commentaire ajouté.');
     }
 }

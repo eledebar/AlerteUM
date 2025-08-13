@@ -79,16 +79,28 @@
         <div class="min-h-screen">
             @include('layouts.navigation')
 
-            @isset($header)
+            {{-- Header compatible: $header (component) o @section('header') --}}
+            @if (isset($header))
                 <header class="bg-white shadow dark:bg-gray-800 dark:shadow-md">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
-            @endisset
+            @elseif (View::hasSection('header'))
+                <header class="bg-white shadow dark:bg-gray-800 dark:shadow-md">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        @yield('header')
+                    </div>
+                </header>
+            @endif
 
             <main class="py-6">
-                {{ $slot }}
+                {{-- Cuerpo compatible: $slot (component) o @yield('content') --}}
+                @isset($slot)
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endisset
             </main>
         </div>
     </div>
@@ -99,7 +111,7 @@
             <button onclick="setFontSize('small')" class="access-control-btn">Texte petit</button>
             <button onclick="setFontSize('normal')" class="access-control-btn">Texte normal</button>
             <button onclick="setFontSize('large')" class="access-control-btn">Texte grand</button>
-           
+
             <button onclick="toggleContrast()" class="access-control-btn">
                 <span id="contrastLabel">Contraste élevé</span>
                 <i id="contrastIcon" class="fas fa-eye ml-2"></i>
@@ -171,8 +183,6 @@
                 icon.className = isActive ? 'fas fa-font ml-2 text-red-400' : 'fas fa-font ml-2';
             }
         }
-
-        
 
         function toggleReading() {
             const icon = document.getElementById('readingIcon');

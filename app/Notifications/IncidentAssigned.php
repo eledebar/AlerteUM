@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 use App\Models\Incident;
 
-class IncidentStatusChanged extends Notification
+class IncidentAssigned extends Notification
 {
     use Queueable;
     public function __construct(public Incident $incident) {}
@@ -16,10 +16,11 @@ class IncidentStatusChanged extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Mise à jour du statut de votre incident')
+            ->subject('Nouvelle assignation d\'incident')
             ->greeting('Bonjour')
-            ->line('Le statut de votre incident a changé: '.$this->incident->statut)
-            ->action('Voir le ticket', url('/utilisateur/incidents/'.$this->incident->id))
+            ->line('Un incident vous a été assigné.')
+            ->line('ID public: '.$this->incident->public_id)
+            ->action('Ouvrir le ticket', url('/resolveur/incidents/'.$this->incident->id))
             ->line('Merci.');
     }
 }

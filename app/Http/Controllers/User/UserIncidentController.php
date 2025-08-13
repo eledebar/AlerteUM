@@ -1,199 +1,151 @@
 <?php
 
 namespace App\Http\Controllers\User;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\Incident;
 use App\Models\User;
 use App\Models\IncidentComment;
-use App\Notifications\IncidentStatutUpdated;
-use App\Notifications\NouvelleIncidentCree;
+use App\Models\IncidentLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Notifications\IncidentReopenedByUser;
 
 class UserIncidentController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        $query = $user->estResolveur()
-            ? Incident::with(['utilisateur', 'gestionnaire'])->latest()
-            : Incident::where('utilisateur_id', $user->id)->latest();
+        $incidents = Incident::query()
+            ->filter($request, $user)
+            ->sorted($request)
+            ->with(['assignedUser','utilisateur','lastLog'])
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
+        $typesDisponibles = $user->estResolveur() ? [] :
+            Incident::where('utilisateur_id', $user->id)->distinct()->pluck('type')->filter()->values();
 
-        if ($user->estResolveur() && $request->boolean('assigne_a_moi')) {
-            $query->where('attribue_a', Auth::id());
-        }
-
-        if (!$user->estResolveur()) {
-            if ($request->filled('type')) {
-                $query->where('type', $request->type);
-            }
-            if ($request->filled('titre')) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('titre', 'like', '%' . $request->titre . '%')
-                      ->orWhere('statut', 'like', '%' . $request->titre . '%');
-                });
-            }
-        }
-
-        if ($request->filled('date_debut')) {
-            $query->whereDate('created_at', '>=', $request->date_debut);
-        }
-
-        if ($request->filled('date_fin')) {
-            $query->whereDate('created_at', '<=', $request->date_fin);
-        }
-
-        $incidents = $query->paginate(10);
-        $typesDisponibles = $user->estResolveur() ? [] : Incident::distinct()->pluck('type')->filter()->values();
-
-        return $user->estResolveur()
-            ? view('resolveur.incidents.index', compact('incidents'))
-            : view('utilisateur.incidents.index', compact('incidents', 'typesDisponibles'));
+        return view('utilisateur.incidents.index', compact('incidents','typesDisponibles'));
     }
 
     public function exportCsv(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $query = Incident::where('utilisateur_id', $user->id)->latest();
+        $rows = Incident::query()
+            ->filter($request, $user)
+            ->sorted($request)
+            ->with(['assignedUser','utilisateur'])
+            ->get();
 
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
-    }
-    if ($request->filled('type')) {
-        $query->where('type', $request->type);
-    }
-    if ($request->filled('titre')) {
-        $query->where(function ($q) use ($request) {
-            $q->where('titre', 'like', '%' . $request->titre . '%')
-              ->orWhere('statut', 'like', '%' . $request->titre . '%');
-        });
-    }
-    if ($request->filled('date_debut')) {
-        $query->whereDate('created_at', '>=', $request->date_debut);
-    }
-    if ($request->filled('date_fin')) {
-        $query->whereDate('created_at', '<=', $request->date_fin);
-    }
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['Code','Titre','Priorité','Statut','Assigné à','Créé','SLA']);
 
-    $incidents = $query->get();
+        foreach ($rows as $i) {
+            $code   = $i->public_id ?? ('INC-'.str_pad($i->id, 4, '0', STR_PAD_LEFT));
+            $prio   = ucfirst(strtolower($i->priority ?? ''));
+            $assign = $i->assignedUser->name ?? '';
+            $sla    = $i->sla_due_at ? (now()->lte($i->sla_due_at) ? 'OK' : 'Breach') : '—';
 
-    $handle = fopen('php://temp', 'r+');
-    fputcsv($handle, ['ID', 'Titre', 'Statut', 'Type']);
+            fputcsv($handle, [
+                $code,
+                $i->titre,
+                $prio,
+                Incident::labelForStatus($i->statut),
+                $assign,
+                optional($i->created_at)->format('Y-m-d H:i'),
+                $sla,
+            ]);
+        }
 
-    foreach ($incidents as $incident) {
-        fputcsv($handle, [
-            $incident->id,
-            $incident->titre,
-            $incident->statut,
-            $incident->type,
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="mes-incidents.csv"',
         ]);
     }
 
-    rewind($handle);
-    $csv = stream_get_contents($handle);
-    fclose($handle);
-
-    return response($csv, 200, [
-        'Content-Type' => 'text/csv',
-        'Content-Disposition' => 'attachment; filename="incidents_utilisateur.csv"',
-    ]);
-}
     public function create(Request $request)
-{
+    {
+        $categorie = $request->input('categorie');
 
-    $categorie = $request->input('categorie');
+        $types = match ($categorie) {
+            'communication' => [
+                'Messagerie'            => "Difficultés avec la messagerie institutionnelle (envoi/réception/accès/config). Indiquez la plateforme et votre adresse institutionnelle.",
+                'Outils collaboratifs'  => "Problèmes avec drive partagé, calendrier, Teams, etc. Indiquez l’outil, la nature du problème et si d’autres sont impactés.",
+            ],
+            'acces' => [
+                'Connexion Internet'    => "Connexion absente/instable/lente via Wi-Fi/Ethernet. Indiquez bâtiment/salle, appareil et horaires approximatifs de coupure.",
+                'Problèmes de mot de passe' => "Accès impossible (mot de passe oublié/expiré). Indiquez le service (ENT, mail…) et si vous avez tenté la réinitialisation.",
+            ],
+            'plateformes' => [
+                'Formulaires en ligne'  => "Erreur à l’affichage/soumission (champs inactifs, validation…). Indiquez le lien, le service et le moment du bug.",
+                'Sites web universitaires' => "Site injoignable ou fonctions KO. Indiquez l’URL et l’appareil (PC/mobile).",
+            ],
+            'equipements' => [
+                'Matériel défectueux'   => "Panne sur ordinateur/imprimante/vidéoprojecteur… Indiquez type, emplacement et symptômes (et si vous avez redémarré).",
+                'Logiciels manquants'   => "Logiciel nécessaire non installé. Indiquez nom, usage prévu et type de poste.",
+                'Problème de licence'   => "Erreur de licence (expirée/invalide). Indiquez logiciel, message exact et impact.",
+            ],
+            'enseignement' => [
+                'Équipements de labo'   => "Équipement de labo en panne. Indiquez nom, emplacement et impact pédagogique.",
+                'Accès à bases de données' => "Accès impossible à une ressource. Indiquez ressource et méthode (ENT, VPN…).",
+            ],
+            'assistance' => [
+                'Demande d’assistance'  => "Aide pour accomplir une tâche (configurer / utiliser un outil…). Décrivez le contexte.",
+                'Orientation numérique' => "Accompagnement / formation. Indiquez outils, rôle et attentes.",
+                'Autres demandes'       => "Autre besoin numérique. Décrivez et laissez un contact.",
+            ],
+            default => [],
+        };
 
-    $types = match ($categorie) {
-        'communication' => [
-            'Messagerie' => "Vous rencontrez des difficultés avec la messagerie institutionnelle (problèmes d'envoi, de réception, d'accès ou de configuration). Veuillez préciser le type de problème rencontré, la plateforme utilisée (web, application, etc.) et indiquer votre adresse e-mail institutionnelle.",
-            'Outils collaboratifs' => "Problèmes liés à l'utilisation d'outils collaboratifs tels que les drives partagés, calendriers ou plateformes de travail en équipe. Merci d’indiquer l’outil concerné, la nature du problème (accès, partage, synchronisation...) et si d’autres utilisateurs sont également impactés.",
-        ],
-        'acces' => [
-            'Connexion Internet' => "Connexion Internet absente, instable ou très lente via le réseau Wi-Fi ou filaire de l’établissement. Merci de préciser l’endroit où le problème survient (bâtiment, salle...), l’appareil utilisé et les horaires approximatifs où la déconnexion se produit.",
-            'Problèmes de mot de passe' => "Vous ne parvenez pas à accéder à un service en raison d’un mot de passe oublié, erroné ou expiré. Veuillez indiquer le service concerné (ENT, messagerie, plateforme...) et si vous avez déjà tenté de réinitialiser le mot de passe. N'oubliez pas d'indiquer votre identifiant universitaire si possible.",
-        ],
-        'plateformes' => [
-            'Formulaires en ligne' => "Vous rencontrez une erreur lors de l’affichage ou de la soumission d’un formulaire en ligne (champs inactifs, validation impossible, données perdues...). Merci d’indiquer le lien du formulaire, le service concerné et le moment où l’erreur est apparue.",
-            'Sites web universitaires' => "L’un des sites web universitaires est inaccessible ou certaines de ses fonctionnalités ne répondent pas. Veuillez indiquer l’URL concernée, ce que vous essayiez de faire et le type d'appareil utilisé (ordinateur, smartphone, etc.).",
-        ],
-        'equipements' => [
-            'Matériel défectueux' => "Un appareil (ordinateur, imprimante, projecteur...) est en panne ou ne fonctionne pas correctement. Merci d’indiquer le type de matériel, son emplacement (salle, bâtiment...), les symptômes du dysfonctionnement et si des tentatives de redémarrage ont été faites.",
-            'Logiciels manquants' => "Un logiciel nécessaire à votre activité n’est pas installé sur votre poste. Merci d’indiquer le nom exact du logiciel, son utilisation prévue et le type de poste concerné (fixe, portable, usage personnel ou partagé).",
-            'Problème de licence' => "Un logiciel indique un problème de licence (activation échouée, licence expirée ou invalide). Merci de préciser le nom du logiciel, le message d’erreur reçu et l’impact sur votre activité (utilisation partielle ou impossible).",
-        ],
-        'enseignement' => [
-            'Équipements de labo' => "Un équipement présent dans un laboratoire ou un atelier ne fonctionne pas ou nécessite une intervention technique. Merci d’indiquer le nom de l’appareil, son emplacement et en quoi cela empêche la réalisation des activités pédagogiques.",
-            'Accès à bases de données' => "Vous ne parvenez pas à accéder à des bases de données ou des ressources scientifiques en ligne. Veuillez indiquer le nom de la ressource, la méthode d’accès utilisée (via ENT, VPN, etc.) et si le problème est constant ou intermittent.",
-        ],
-        'assistance' => [
-            'Demande d’assistance' => "Vous souhaitez être aidé(e) pour accomplir une tâche numérique précise (utilisation d’un outil, configuration d’un service, résolution d’un problème technique...). Merci de décrire votre besoin et le contexte d’utilisation.",
-            'Orientation numérique' => "Vous demandez un accompagnement ou une formation pour mieux utiliser les outils numériques de l’établissement. Merci d’indiquer les outils concernés, votre rôle dans l’établissement (étudiant, enseignant, personnel...) et vos attentes.",
-            'Autres demandes' => "Votre demande ne correspond à aucune des catégories précédentes mais concerne un service ou outil numérique. Merci de décrire clairement votre situation, le besoin identifié et d’indiquer vos coordonnées de contact (email, rôle, etc.).",
-        ],
-        
-        default => [],
-    };
-
-    return view('utilisateur.incidents.create', [
-        'categorie' => $categorie,
-        'types' => $types,
-    ]);
-}
+        return view('utilisateur.incidents.create', compact('categorie','types'));
+    }
 
     public function store(Request $request)
     {
         if (Auth::user()->estResolveur()) {
             $request->validate([
-                'titre' => 'required|string',
-                'description' => 'required|string',
-                'utilisateur_id' => 'required|exists:users,id',
-                'attribue_a' => 'nullable|exists:users,id',
+                'titre'           => 'required|string',
+                'description'     => 'required|string',
+                'utilisateur_id'  => 'required|exists:users,id',
+                'attribue_a'      => 'nullable|exists:users,id',
             ]);
 
             Incident::create([
-                'titre' => $request->titre,
-                'description' => $request->description,
-                'statut' => 'nouveau',
+                'titre'          => $request->titre,
+                'description'    => $request->description,
+                'statut'         => Incident::STATUT_NOUVEAU,
                 'utilisateur_id' => $request->utilisateur_id,
-                'attribue_a' => $request->attribue_a,
+                'attribue_a'     => $request->attribue_a,
             ]);
 
             return redirect()->route('resolveur.incidents.index')->with('success', 'Incident créé avec succès.');
         }
 
-        // Usuario normal
         $request->validate([
-            'titre' => 'required|string|max:255',
+            'titre'       => 'required|string|max:255',
             'description' => 'required|string',
-            'categorie' => 'required|string',
-            'type' => 'required|string',
+            'categorie'   => 'required|string',
+            'type'        => 'required|string',
         ]);
 
         $incident = Incident::create([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'categorie' => $request->categorie,
-            'type' => $request->type,
-            'statut' => 'nouveau',
+            'titre'          => $request->titre,
+            'description'    => $request->description,
+            'categorie'      => $request->categorie,
+            'type'           => $request->type,
+            'statut'         => Incident::STATUT_NOUVEAU,
             'utilisateur_id' => Auth::id(),
         ]);
 
-        // // 🔔 Notificar a todos los resolveur
-        // User::where('role', 'resolveur')->get()->each(function ($resolveur) use ($incident) {
-        //     $resolveur->notify(new NouvelleIncidentCree($incident));
-        // });
-
-        return redirect()->route('utilisateur.incidents.show', $incident)->with('success', 'Incident créé avec succès.');
+        return redirect()->route('utilisateur.incidents.show', $incident)
+            ->with('success', 'Incident créé avec succès.');
     }
 
     public function edit(Incident $incident)
@@ -201,12 +153,12 @@ class UserIncidentController extends Controller
         $this->authorize('update', $incident);
 
         if (Auth::user()->estResolveur()) {
-            $incident->load(['utilisateur', 'commentaires.auteur']);
-            $resolveurs = User::where('role', 'resolveur')->get();
-            return view('resolveur.incidents.edit', compact('incident', 'resolveurs'));
+            $incident->load(['utilisateur','commentaires.auteur']);
+            $resolveurs = User::where('role','resolveur')->get();
+            return view('resolveur.incidents.edit', compact('incident','resolveurs'));
         }
 
-        if ($incident->statut !== 'nouveau') {
+        if ($incident->statut !== Incident::STATUT_NOUVEAU) {
             return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de modifier un incident déjà traité.');
         }
 
@@ -219,26 +171,19 @@ class UserIncidentController extends Controller
 
         if (Auth::user()->estResolveur()) {
             $request->validate([
-                'statut' => 'required|in:nouveau,en_cours,résolu',
+                'statut'      => 'required|in:nouveau,en_cours,resolu,ferme,résolu,fermé',
                 'commentaire' => 'nullable|string',
-                'attribue_a' => 'nullable|exists:users,id',
+                'attribue_a'  => 'nullable|exists:users,id',
             ]);
 
-            $ancienStatut = $incident->statut;
+            $incident->attribue_a = $request->attribue_a;
 
-            $incident->update([
-                'statut' => $request->statut,
-                'attribue_a' => $request->attribue_a,
-            ]);
-
-            if ($incident->utilisateur && $ancienStatut !== $incident->statut) {
-                $incident->utilisateur->notify(new IncidentStatutUpdated($incident));
-            }
+            $incident->setStatusWithLog($request->statut);
 
             if ($request->filled('commentaire')) {
                 IncidentComment::create([
                     'incident_id' => $incident->id,
-                    'user_id' => Auth::id(),
+                    'user_id'     => Auth::id(),
                     'commentaire' => $request->commentaire,
                 ]);
             }
@@ -246,17 +191,17 @@ class UserIncidentController extends Controller
             return redirect()->route('resolveur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
         }
 
-        if ($incident->statut !== 'nouveau') {
+        if ($incident->statut !== Incident::STATUT_NOUVEAU) {
             return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de mettre à jour un incident déjà traité.');
         }
 
         $request->validate([
-            'titre' => 'required|string',
+            'titre'       => 'required|string',
             'description' => 'required|string',
         ]);
 
         $incident->update([
-            'titre' => $request->titre,
+            'titre'       => $request->titre,
             'description' => $request->description,
         ]);
 
@@ -267,29 +212,77 @@ class UserIncidentController extends Controller
     {
         $this->authorize('delete', $incident);
 
-        if ($incident->statut !== 'nouveau') {
-            return redirect()->back()->with('error', 'Impossible de supprimer un incident déjà traité.');
+        if ($incident->statut !== Incident::STATUT_NOUVEAU) {
+            return back()->with('error', 'Impossible de supprimer un incident déjà traité.');
         }
 
         $incident->delete();
-
-        $route = Auth::user()->estResolveur() ? 'resolveur.incidents.index' : 'utilisateur.incidents.index';
-
-        return redirect()->route($route)->with('success', 'Incident supprimé avec succès.');
+        return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident supprimé avec succès.');
     }
 
     public function show(Incident $incident)
     {
         $user = Auth::user();
-
         if (!$user->estResolveur() && $incident->utilisateur_id !== $user->id) {
-            abort(403, 'Accès non autorisé.');
+            abort(403);
+        }
+        $incident->load(['utilisateur','gestionnaire','commentaires.auteur']);
+        return view('utilisateur.incidents.show', compact('incident'));
+    }
+
+    public function confirmClose(Incident $incident)
+    {
+        $user = Auth::user();
+        if ($incident->utilisateur_id !== $user->id) abort(403);
+        if (Incident::normalizeStatus($incident->statut) !== Incident::STATUT_RESOLU) {
+            return back()->with('error', 'Le ticket doit être en statut "résolu".');
         }
 
-        $incident->load(['utilisateur', 'gestionnaire', 'commentaires.auteur']);
+        $incident->setStatusWithLog(Incident::STATUT_FERME, 'Confirmation utilisateur');
 
-        return $user->estResolveur()
-            ? view('resolveur.incidents.show', compact('incident'))
-            : view('utilisateur.incidents.show', compact('incident'));
+        IncidentLog::create([
+            'incident_id' => $incident->id,
+            'user_id'     => $user->id,
+            'action'      => 'closed_confirmed',
+            'from_status' => Incident::STATUT_RESOLU,
+            'to_status'   => Incident::STATUT_FERME,
+            'details'     => 'Confirmation par l’utilisateur',
+        ]);
+
+        // Mensaje bonito: “Fermé”
+        $label = Incident::labelForStatus(Incident::STATUT_FERME);
+        return back()->with('success', 'Ticket passé à "' . $label . '".');
+    }
+
+    public function rejectClose(Incident $incident, Request $request)
+    {
+        $user = Auth::user();
+        if ($incident->utilisateur_id !== $user->id) abort(403);
+
+        $data = $request->validate(['reason' => 'required|string|min:5']);
+
+        IncidentComment::create([
+            'incident_id' => $incident->id,
+            'user_id'     => $user->id,
+            'commentaire' => $data['reason'],
+        ]);
+
+        $incident->setStatusWithLog(Incident::STATUT_EN_COURS, 'Réouverture suite à rejet utilisateur');
+
+        IncidentLog::create([
+            'incident_id' => $incident->id,
+            'user_id'     => $user->id,
+            'action'      => 'close_rejected',
+            'from_status' => Incident::STATUT_RESOLU,
+            'to_status'   => Incident::STATUT_EN_COURS,
+            'details'     => $data['reason'],
+        ]);
+
+        if ($incident->assignedUser) {
+            $incident->assignedUser->notify(new IncidentReopenedByUser($incident, $data['reason']));
+        }
+
+        $label = Incident::labelForStatus(Incident::STATUT_EN_COURS);
+        return back()->with('success', 'Réouvert. Le ticket revient à "' . $label . '".');
     }
 }
