@@ -6,7 +6,6 @@
 
 @section('content')
 <style>
-    /* Inputs de fecha: icono visible en dark y buen alineado */
     input[type="date"]::-webkit-date-and-time-value{ text-align:left; }
     input[type="date"]::-webkit-datetime-edit-text{ padding:0 2px; }
     .dark input[type="date"]::-webkit-calendar-picker-indicator{ filter:invert(1); opacity:.9; }
@@ -20,7 +19,7 @@
     @endif
 
     <div class="mb-4 flex flex-wrap items-center gap-3">
-        <a href="{{ route('utilisateur.incidents.create') }}"
+        <a href="{{ route('utilisateur.incidents.categories') }}"
            class="inline-flex items-center gap-2 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
             + Signaler un incident
         </a>
@@ -31,12 +30,9 @@
         </a>
     </div>
 
-    {{-- FILTROS (auto-apply) --}}
     <form id="filtersForm" method="GET" class="mb-5 space-y-4">
-        {{-- Reparto 12 cols: 2 + 4 + 3 + 3 --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
 
-            {{-- Statut (2) --}}
             <div class="lg:col-span-2">
                 <label class="block text-sm text-gray-600 dark:text-gray-300">Statut</label>
                 @php $st = request('statut'); @endphp
@@ -58,7 +54,6 @@
                 </select>
             </div>
 
-            {{-- Priorité (4) --}}
             @php $pr = strtolower(request('priority', request('priorite', ''))); @endphp
             <div class="lg:col-span-4">
                 <label class="block text-sm text-gray-600 dark:text-gray-300">Priorité</label>
@@ -91,19 +86,16 @@
                     @endforeach
                 </div>
 
-                {{-- Espejos por si el scope usa "priorite" (fr) --}}
                 <input type="hidden" name="priority"  id="priorityValue"  value="{{ e($pr) }}">
                 <input type="hidden" name="priorite"  id="prioriteMirror" value="{{ e($pr) }}">
             </div>
 
-            {{-- Du (3) --}}
             <div class="lg:col-span-3">
                 <label for="from" class="block text-sm text-gray-600 dark:text-gray-300">Du</label>
                 <input type="date" name="from" id="from" value="{{ request('from') }}"
                        class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
             </div>
 
-            {{-- Au (3) --}}
             <div class="lg:col-span-3">
                 <label for="to" class="block text-sm text-gray-600 dark:text-gray-300">Au</label>
                 <input type="date" name="to" id="to" value="{{ request('to') }}"
@@ -130,7 +122,6 @@
         </div>
     </form>
 
-    {{-- TABLA --}}
     <div class="overflow-hidden rounded border bg-white dark:border-gray-800 dark:bg-gray-900">
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto text-sm text-gray-900 dark:text-gray-100">
@@ -140,7 +131,6 @@
                         <th class="p-3 text-left font-semibold">Titre</th>
                         <th class="p-3 text-left font-semibold">Priorité</th>
                         <th class="p-3 text-left font-semibold">Statut</th>
-                        <th class="p-3 text-left font-semibold">SLA</th>
                         <th class="p-3 text-left font-semibold">Créé</th>
                         <th class="p-3 text-left font-semibold">Actions</th>
                     </tr>
@@ -150,7 +140,6 @@
                         @php
                             $public = $i->public_id ?? ('INC-' . str_pad($i->id, 4, '0', STR_PAD_LEFT));
 
-                            // PRIORIDAD (label + badge)
                             $prioKey = strtolower($i->priority ?? $i->priorite ?? '');
                             $prioKey = str_replace(['é','É'],'e',$prioKey);
                             $prioLabel = $prioKey ? config('itil.labels.priority.'.$prioKey, ucfirst($prioKey)) : '—';
@@ -161,30 +150,12 @@
                                 'critical' => 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
                             ][$prioKey] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-200';
 
-                            // ESTADO
                             $statusKey   = $i->statut ?? '';
                             $statusLabel = config('itil.labels.status.'.$statusKey);
                             if (!$statusLabel) {
                                 $statusLabel = \Illuminate\Support\Str::of($statusKey)->replace(['_','-'],' ')->title();
                             }
 
-                            // SLA
-                            $hasSla   = !empty($i->sla_due_at ?? null);
-                            $isClosed = in_array($statusKey, ['résolu','resolu','fermé','ferme']);
-                            $slaTxt   = '—';
-                            $slaClass = '';
-                            if ($hasSla && !$isClosed) {
-                                $deadline = \Illuminate\Support\Carbon::parse($i->sla_due_at);
-                                if (now()->lessThanOrEqualTo($deadline)) {
-                                    $slaTxt = 'OK';
-                                    $slaClass = 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300';
-                                } else {
-                                    $slaTxt = 'Breach';
-                                    $slaClass = 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300';
-                                }
-                            }
-
-                            // Acciones del usuario
                             $isOwner   = auth()->id() === ($i->utilisateur_id ?? $i->user_id ?? null);
                             $canEdit   = $isOwner && $statusKey === 'nouveau';
                         @endphp
@@ -197,32 +168,20 @@
                                 </span>
                             </td>
                             <td class="p-3 align-middle">{{ $statusLabel }}</td>
-                            <td class="p-3 align-middle">
-                                @if($hasSla && !$isClosed)
-                                    <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold {{ $slaClass }}">
-                                        {{ $slaTxt }}
-                                    </span>
-                                @else
-                                    —
-                                @endif
-                            </td>
                             <td class="p-3 align-middle">{{ optional($i->created_at)->format('Y-m-d') }}</td>
                             <td class="p-3 align-middle">
                                 <div class="flex items-center gap-2">
-                                    {{-- Ver --}}
                                     <a href="{{ route('utilisateur.incidents.show', $i) }}"
                                        class="h-8 w-8 transform transition hover:scale-110" title="Voir" aria-label="Voir">
                                         <img src="{{ asset('eye.webp') }}" alt="Voir" class="h-full w-full rounded object-contain">
                                     </a>
 
                                     @if($canEdit)
-                                        {{-- Editar --}}
                                         <a href="{{ route('utilisateur.incidents.edit', $i) }}"
                                            class="h-8 w-8 transform transition hover:scale-110" title="Éditer" aria-label="Éditer">
                                             <img src="{{ asset('edit.webp') }}" alt="Éditer" class="h-full w-full rounded object-contain">
                                         </a>
 
-                                        {{-- Borrar --}}
                                         <form method="POST" action="{{ route('utilisateur.incidents.destroy', $i) }}"
                                               onsubmit="return confirm('Supprimer cet incident ?')" class="h-8 w-8">
                                             @csrf @method('DELETE')
@@ -236,7 +195,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-4 text-center text-gray-500">Aucun incident</td>
+                            <td colspan="6" class="p-4 text-center text-gray-500">Aucun incident</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -249,7 +208,6 @@
     </div>
 </div>
 
-{{-- JS: auto-apply + coherencia de fechas + prioridad en tiempo real + debounce de búsqueda --}}
 <script>
 (function(){
     const form = document.getElementById('filtersForm');
@@ -263,7 +221,6 @@
     const q = document.getElementById('qSearch');
     if (q) q.addEventListener('input', debounce(()=> form.submit(), 450));
 
-    // Prioridad (píldoras)
     const priorityValue  = document.getElementById('priorityValue');
     const prioriteMirror = document.getElementById('prioriteMirror');
     document.querySelectorAll('.priority-pill').forEach(btn=>{
@@ -275,7 +232,6 @@
         });
     });
 
-    // Fechas: Du <= Au + min/max dinámicos
     const from = document.getElementById('from');
     const to   = document.getElementById('to');
 

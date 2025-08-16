@@ -45,7 +45,7 @@ class DashboardController extends Controller
         $nouveaux = (clone $query)->where('statut', 'nouveau')->count();
         $enCours  = (clone $query)->where('statut', 'en_cours')->count();
         $resolus  = (clone $query)->where('statut', 'résolu')->count();
-        $fermes   = (clone $query)->whereIn('statut', ['fermé', 'ferme'])->count(); // acento o sin acento
+        $fermes   = (clone $query)->whereIn('statut', ['fermé', 'ferme'])->count(); 
         $total    = $nouveaux + $enCours + $resolus + $fermes;
 
         $parCategorie = (clone $query)

@@ -6,7 +6,6 @@
     </x-slot>
 
     <div class="max-w-7xl mx-auto p-6">
-        {{-- Flash --}}
         @if (session('success'))
             <div class="mb-4 rounded border border-green-300 bg-green-50 px-4 py-3 text-green-800">
                 {{ session('success') }}
@@ -18,10 +17,8 @@
             </div>
         @endif
 
-        {{-- FILTROS --}}
         <form id="filtersForm" method="GET" class="mb-5 space-y-4">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-                {{-- Statut --}}
                 <div class="lg:col-span-2">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Statut</label>
                     @php $st = request('statut'); @endphp
@@ -35,7 +32,6 @@
                     </select>
                 </div>
 
-                {{-- Priorité (píldoras) --}}
                 @php $pr = strtolower(request('priority', request('priorite',''))); @endphp
                 <div class="lg:col-span-4">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Priorité</label>
@@ -67,7 +63,6 @@
                     <input type="hidden" name="priorite"  id="prioriteMirror" value="{{ e($pr) }}">
                 </div>
 
-                {{-- Sólo mis tickets asignados --}}
                 <div class="lg:col-span-3 flex items-center gap-2">
                     <input type="checkbox" id="assigned" name="assigned" value="me"
                            {{ request('assigned')==='me' ? 'checked' : '' }}
@@ -77,7 +72,6 @@
                     </label>
                 </div>
 
-                {{-- Du / Au --}}
                 <div class="lg:col-span-1">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Du</label>
                     <input type="date" name="from" id="from" value="{{ request('from') }}"
@@ -89,7 +83,6 @@
                            class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
 
-                {{-- Per page --}}
                 <div class="lg:col-span-1">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Page</label>
                     <select name="per_page" class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
@@ -101,12 +94,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                {{-- búsqueda --}}
                 <input type="search" name="q" id="qSearch" value="{{ request('q') }}"
                        placeholder="🔎 Rechercher titre / code / description…"
                        class="w-full md:flex-1 md:min-w-[280px] rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
 
-                {{-- sort --}}
                 @php $sort = request('sort','prio'); $dir = request('dir','desc'); @endphp
                 <label class="text-sm text-gray-600 dark:text-gray-300">Trier</label>
                 <select name="sort" class="auto-submit rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
@@ -122,7 +113,6 @@
                     Réinitialiser
                 </a>
 
-                {{-- export opcional si tienes la ruta --}}
                 @if(Route::has('resolveur.incidents.export.csv'))
                     <a href="{{ route('resolveur.incidents.export.csv', request()->query()) }}"
                        class="ml-auto inline-flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700">
@@ -132,7 +122,6 @@
             </div>
         </form>
 
-        {{-- TABLA --}}
         <div class="overflow-hidden rounded border bg-white dark:border-gray-800 dark:bg-gray-900">
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto text-sm text-gray-900 dark:text-gray-100">
@@ -167,9 +156,11 @@
                                 $statusLabel = \Illuminate\Support\Str::of($statusKey)->replace(['_','-'],' ')->title();
 
                                 $hasSla = !empty($i->sla_due_at ?? null);
-                                $isClosed = in_array($statusKey, ['résolu','resolu','fermé','ferme']);
+                                $isClosedForSla = in_array($statusKey, ['résolu','resolu','fermé','ferme']);
+                                $isFermeStrict = \App\Models\Incident::normalizeStatus($i->statut) === \App\Models\Incident::STATUT_FERME;
+
                                 $slaTxt = '—'; $slaClass='';
-                                if ($hasSla && !$isClosed) {
+                                if ($hasSla && !$isClosedForSla) {
                                     $deadline = \Illuminate\Support\Carbon::parse($i->sla_due_at);
                                     if (now()->lessThanOrEqualTo($deadline)) {
                                         $slaTxt='OK'; $slaClass='bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300';
@@ -197,7 +188,7 @@
                                 </td>
                                 <td class="p-3 align-middle">{{ $statusLabel }}</td>
                                 <td class="p-3 align-middle">
-                                    @if($hasSla && !$isClosed)
+                                    @if($hasSla && !$isClosedForSla)
                                         <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold {{ $slaClass }}">{{ $slaTxt }}</span>
                                     @else
                                         —
@@ -212,10 +203,12 @@
                                            class="h-8 w-8 transform transition hover:scale-110" title="Voir" aria-label="Voir">
                                             <img src="{{ asset('eye.webp') }}" alt="Voir" class="h-full w-full rounded object-contain">
                                         </a>
-                                        <a href="{{ route('resolveur.incidents.edit', $i) }}"
-                                           class="h-8 w-8 transform transition hover:scale-110" title="Éditer" aria-label="Éditer">
-                                            <img src="{{ asset('edit.webp') }}" alt="Éditer" class="h-full w-full rounded object-contain">
-                                        </a>
+                                        @if(!$isFermeStrict)
+                                            <a href="{{ route('resolveur.incidents.edit', $i) }}"
+                                               class="h-8 w-8 transform transition hover:scale-110" title="Éditer" aria-label="Éditer">
+                                                <img src="{{ asset('edit.webp') }}" alt="Éditer" class="h-full w-full rounded object-contain">
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -234,21 +227,12 @@
         </div>
     </div>
 
-    {{-- JS auto-apply + fechas + prioridad --}}
     <script>
         (function(){
             const form = document.getElementById('filtersForm');
-
             const debounce = (fn, ms=400) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms);} };
-
-            document.querySelectorAll('.auto-submit').forEach(el=>{
-                el.addEventListener('change', ()=> form.submit());
-            });
-
-            const q = document.getElementById('qSearch');
-            if (q) q.addEventListener('input', debounce(()=> form.submit(), 450));
-
-            // Prioridad
+            document.querySelectorAll('.auto-submit').forEach(el=>{ el.addEventListener('change', ()=> form.submit()); });
+            const q = document.getElementById('qSearch'); if (q) q.addEventListener('input', debounce(()=> form.submit(), 450));
             const priorityValue  = document.getElementById('priorityValue');
             const prioriteMirror = document.getElementById('prioriteMirror');
             document.querySelectorAll('.priority-pill').forEach(btn=>{
@@ -259,13 +243,9 @@
                     form.submit();
                 });
             });
-
-            // Fechas coherentes
             const from = document.getElementById('from');
             const to   = document.getElementById('to');
-            function syncMinMax(){
-                if (from && to){ to.min = from.value || ''; from.max = to.value || ''; }
-            }
+            function syncMinMax(){ if (from && to){ to.min = from.value || ''; from.max = to.value || ''; } }
             function ensureOrderAndSubmit(changed){
                 if (!from || !to) return;
                 if (from.value && to.value && to.value < from.value){

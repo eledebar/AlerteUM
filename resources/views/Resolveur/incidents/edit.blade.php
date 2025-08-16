@@ -7,15 +7,10 @@
 
     <div class="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8">
-
-            {{-- TOAST --}}
-            <div id="toast"
-                 class="fixed top-4 right-4 z-50 hidden rounded-lg px-4 py-3 shadow-lg text-sm font-medium
-                        bg-green-600 text-white dark:bg-green-500">
+            <div id="toast" class="fixed top-4 right-4 z-50 hidden rounded-lg px-4 py-3 shadow-lg text-sm font-medium bg-green-600 text-white dark:bg-green-500">
                 <span id="toastText">OK</span>
             </div>
 
-            {{-- Info solo lectura --}}
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informations</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -34,32 +29,27 @@
                 </div>
             </div>
 
-            {{-- Gestión rápida (Estado + Prioridad + Escalar) --}}
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 dark:text-white mb-4">Actions</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {{-- Estado --}}
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Statut</label>
-                        <select id="statut"
-                                class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        <select id="statut" class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                             <option value="nouveau" @selected($incident->statut==='nouveau')>Nouveau</option>
                             <option value="en_cours" @selected($incident->statut==='en_cours')>En cours</option>
                             <option value="résolu"  @selected($incident->statut==='résolu')>Résolu</option>
-                            <option value="fermé"   @selected($incident->statut==='fermé')>Fermé</option>
                         </select>
                     </div>
 
-                    {{-- Prioridad --}}
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Priorité</label>
                         @php
-                            $currentPriority = strtolower($incident->priority ?? ($incident->priorite ?? 'medium'));
+                            $currentPriority = strtolower($incident->priority ?? ($incident->priorite ?? ''));
                             $currentPriority = str_replace(['é','É'],'e',$currentPriority);
                         @endphp
-                        <select id="priority"
-                                class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                        <select id="priority" class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            <option value="" @selected($currentPriority==='')>Non défini</option>
                             <option value="low"      @selected($currentPriority==='low')>Low</option>
                             <option value="medium"   @selected($currentPriority==='medium')>Medium</option>
                             <option value="high"     @selected($currentPriority==='high')>High</option>
@@ -70,25 +60,20 @@
                         </p>
                     </div>
 
-                    {{-- Reasignar / Escalar --}}
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Réassigner (Escalader)</label>
                         <div class="flex gap-2">
-                            <select id="to_resolveur_id"
-                                    class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                            <select id="to_resolveur_id" class="w-full rounded border px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                                 <option value="">— Sélectionner —</option>
                                 @foreach($resolveurs as $r)
                                     <option value="{{ $r->id }}" @selected($incident->attribue_a == $r->id)>{{ $r->name }}</option>
                                 @endforeach
                             </select>
-                            <button id="escalateBtn" type="button"
-                                    class="shrink-0 inline-flex items-center gap-2 rounded bg-indigo-600 hover:bg-indigo-700
-                                           text-white px-4 py-2">
-                                <span class="inline-block" id="escalateText">Escalader</span>
+                            <button id="escalateBtn" type="button" class="shrink-0 inline-flex items-center gap-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2">
+                                <span id="escalateText">Escalader</span>
                                 <svg id="escalateSpin" class="hidden animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                 </svg>
                             </button>
                         </div>
@@ -99,34 +84,26 @@
                 </div>
 
                 <div class="mt-6 flex items-center justify-between">
-                    <a href="{{ route('resolveur.incidents.index') }}"
-                       class="rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2">← Retour</a>
+                    <a href="{{ route('resolveur.incidents.index') }}" class="rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2">← Retour</a>
 
-                    <button id="saveBtn" type="button"
-                            class="inline-flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-700
-                                   disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2">
+                    <button id="saveBtn" type="button" class="inline-flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2">
                         <span id="saveText">Enregistrer les modifications</span>
                         <svg id="saveSpin" class="hidden animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor"
-                                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            {{-- Comentarios --}}
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 dark:text-white mb-4">Commentaires</h3>
 
                 <form method="POST" action="{{ route('resolveur.incidents.comment', $incident) }}" class="space-y-3">
                     @csrf
-                    <textarea name="commentaire" rows="3"
-                              class="w-full rounded border dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                              placeholder="Ajouter un commentaire…"></textarea>
+                    <textarea name="commentaire" rows="3" class="w-full rounded border dark:border-gray-700 dark:bg-gray-800 dark:text-white" placeholder="Ajouter un commentaire…"></textarea>
                     <div class="flex items-center justify-end">
-                        <button type="submit"
-                                class="rounded bg-green-600 hover:bg-green-700 text-white px-4 py-2">
+                        <button type="submit" class="rounded bg-green-600 hover:bg-green-700 text-white px-4 py-2">
                             Publier
                         </button>
                     </div>
@@ -146,11 +123,9 @@
                     </ul>
                 @endif
             </div>
-
         </div>
     </div>
 
-    {{-- Formularios “fantasma” para conocer rutas; los enviamos por fetch --}}
     <form id="statusForm" class="hidden" method="POST" action="{{ route('resolveur.incidents.status', $incident) }}">
         @csrf
         <input type="hidden" name="statut">
@@ -167,7 +142,6 @@
     <script>
         (function () {
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
             const toast = document.getElementById('toast');
             const toastText = document.getElementById('toastText');
             let toastTimer;
@@ -183,13 +157,8 @@
                     setTimeout(()=>toast.classList.add('hidden'), 250);
                 }, 2500);
             }
-
-            @if (session('success'))
-                showToast(@json(session('success')), true);
-            @endif
-            @if($errors->any())
-                showToast(@json($errors->first()), false);
-            @endif
+            @if (session('success')) showToast(@json(session('success')), true); @endif
+            @if($errors->any()) showToast(@json($errors->first()), false); @endif
 
             const statut   = document.getElementById('statut');
             const priority = document.getElementById('priority');
@@ -202,10 +171,7 @@
             const escalateSpin  = document.getElementById('escalateSpin');
             const toResolveur   = document.getElementById('to_resolveur_id');
 
-            const initial = {
-                statut:   statut.value,
-                priority: priority.value
-            };
+            const initial = { statut: statut.value, priority: priority.value };
 
             function updateDirty() {
                 const changed = (statut.value !== initial.statut) || (priority.value !== initial.priority);
@@ -219,34 +185,33 @@
             async function postForm(url, data) {
                 return await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token,
-                        'Accept': 'text/html;charset=UTF-8'
-                    },
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'text/html;charset=UTF-8' },
                     body: new URLSearchParams(data)
                 });
             }
 
             saveBtn.addEventListener('click', async () => {
                 if (!updateDirty()) return;
+                if (['fermé','ferme'].includes((statut.value || '').toLowerCase())) {
+                    showToast('Le statut "fermé" ne peut pas être sélectionné par le résolveur', false);
+                    return;
+                }
                 saveBtn.disabled = true;
                 saveText.textContent = 'Enregistrement…';
                 saveSpin.classList.remove('hidden');
-
                 try {
                     if (statut.value !== initial.statut) {
-                        const res = await postForm(document.getElementById('statusForm').action, { statut: statut.value });
-                        if (!res.ok) throw new Error('Erreur en mettant à jour le statut');
+                        const res1 = await postForm(document.getElementById('statusForm').action, { statut: statut.value });
+                        if (!res1.ok) throw new Error('Erreur en mettant à jour le statut');
                         initial.statut = statut.value;
                     }
                     if (priority.value !== initial.priority) {
-                        const res = await postForm(document.getElementById('priorityForm').action, { priority: priority.value });
-                        if (!res.ok) throw new Error('Erreur en enregistrant la priorité');
+                        const res2 = await postForm(document.getElementById('priorityForm').action, { priority: priority.value });
+                        if (!res2.ok) throw new Error('Erreur en enregistrant la priorité');
                         initial.priority = priority.value;
                     }
                     showToast('Modifications enregistrées ✅', true);
                 } catch (e) {
-                    console.error(e);
                     showToast(e.message || 'Erreur lors de la sauvegarde', false);
                 } finally {
                     saveText.textContent = 'Enregistrer les modifications';
@@ -255,23 +220,17 @@
                 }
             });
 
-            
             escalateBtn.addEventListener('click', async () => {
                 const dest = toResolveur.value;
                 if (!dest) { showToast('Sélectionnez un résolveur', false); return; }
                 if (!confirm('Réassigner cet incident ?')) return;
-
                 escalateBtn.disabled = true;
                 escalateSpin.classList.remove('hidden');
-
                 try {
-                    const res = await postForm(document.getElementById('escalateForm').action, {
-                        to_resolveur_id: dest
-                    });
+                    const res = await postForm(document.getElementById('escalateForm').action, { to_resolveur_id: dest });
                     if (!res.ok) throw new Error('Erreur lors de la réassignation');
                     showToast('Incident réassigné ✅', true);
                 } catch (e) {
-                    console.error(e);
                     showToast(e.message || 'Erreur lors de la réassignation', false);
                 } finally {
                     escalateBtn.disabled = false;

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +32,10 @@ class User extends Authenticatable
         return $this->hasMany(Incident::class, 'utilisateur_id');
     }
 
+    public function estAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 
     public function estResolveur(): bool
     {
@@ -42,5 +45,15 @@ class User extends Authenticatable
     public function estUtilisateur(): bool
     {
         return $this->role === 'utilisateur';
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles, true);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\IncidentLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\IncidentReopenedByUser;
+use App\Notifications\IncidentCreated;
 
 class UserIncidentController extends Controller
 {
@@ -18,14 +19,15 @@ class UserIncidentController extends Controller
         $user = Auth::user();
 
         $incidents = Incident::query()
-            ->filter($request, $user)
+            ->where('utilisateur_id', $user->id)
+            ->filter($request)
             ->sorted($request)
             ->with(['assignedUser','utilisateur','lastLog'])
             ->paginate(10)
             ->withQueryString();
 
-        $typesDisponibles = $user->estResolveur() ? [] :
-            Incident::where('utilisateur_id', $user->id)->distinct()->pluck('type')->filter()->values();
+        $typesDisponibles = Incident::where('utilisateur_id', $user->id)
+            ->distinct()->pluck('type')->filter()->values();
 
         return view('utilisateur.incidents.index', compact('incidents','typesDisponibles'));
     }
@@ -35,7 +37,8 @@ class UserIncidentController extends Controller
         $user = Auth::user();
 
         $rows = Incident::query()
-            ->filter($request, $user)
+            ->where('utilisateur_id', $user->id)
+            ->filter($request)
             ->sorted($request)
             ->with(['assignedUser','utilisateur'])
             ->get();
@@ -88,18 +91,18 @@ class UserIncidentController extends Controller
                 'Sites web universitaires' => "Site injoignable ou fonctions KO. Indiquez l’URL et l’appareil (PC/mobile).",
             ],
             'equipements' => [
-                'Matériel défectueux'   => "Panne sur ordinateur/imprimante/vidéoprojecteur… Indiquez type, emplacement et symptômes (et si vous avez redémarré).",
+                'Matériel défectueux'   => "Panne sur ordinateur/imprimante/vidéoprojecteur… Indiquez type, emplacement et symptômes.",
                 'Logiciels manquants'   => "Logiciel nécessaire non installé. Indiquez nom, usage prévu et type de poste.",
-                'Problème de licence'   => "Erreur de licence (expirée/invalide). Indiquez logiciel, message exact et impact.",
+                'Problème de licence'   => "Erreur de licence. Indiquez logiciel, message exact et impact.",
             ],
             'enseignement' => [
                 'Équipements de labo'   => "Équipement de labo en panne. Indiquez nom, emplacement et impact pédagogique.",
-                'Accès à bases de données' => "Accès impossible à une ressource. Indiquez ressource et méthode (ENT, VPN…).",
+                'Accès à bases de données' => "Accès impossible à une ressource. Indiquez ressource et méthode.",
             ],
             'assistance' => [
-                'Demande d’assistance'  => "Aide pour accomplir une tâche (configurer / utiliser un outil…). Décrivez le contexte.",
-                'Orientation numérique' => "Accompagnement / formation. Indiquez outils, rôle et attentes.",
-                'Autres demandes'       => "Autre besoin numérique. Décrivez et laissez un contact.",
+                'Demande d’assistance'  => "Aide pour accomplir une tâche. Décrivez le contexte.",
+                'Orientation numérique' => "Accompagnement ou formation.",
+                'Autres demandes'       => "Autre besoin numérique.",
             ],
             default => [],
         };
@@ -109,25 +112,6 @@ class UserIncidentController extends Controller
 
     public function store(Request $request)
     {
-        if (Auth::user()->estResolveur()) {
-            $request->validate([
-                'titre'           => 'required|string',
-                'description'     => 'required|string',
-                'utilisateur_id'  => 'required|exists:users,id',
-                'attribue_a'      => 'nullable|exists:users,id',
-            ]);
-
-            Incident::create([
-                'titre'          => $request->titre,
-                'description'    => $request->description,
-                'statut'         => Incident::STATUT_NOUVEAU,
-                'utilisateur_id' => $request->utilisateur_id,
-                'attribue_a'     => $request->attribue_a,
-            ]);
-
-            return redirect()->route('resolveur.incidents.index')->with('success', 'Incident créé avec succès.');
-        }
-
         $request->validate([
             'titre'       => 'required|string|max:255',
             'description' => 'required|string',
@@ -144,6 +128,8 @@ class UserIncidentController extends Controller
             'utilisateur_id' => Auth::id(),
         ]);
 
+        $request->user()->notify(new IncidentCreated($incident));
+
         return redirect()->route('utilisateur.incidents.show', $incident)
             ->with('success', 'Incident créé avec succès.');
     }
@@ -151,12 +137,6 @@ class UserIncidentController extends Controller
     public function edit(Incident $incident)
     {
         $this->authorize('update', $incident);
-
-        if (Auth::user()->estResolveur()) {
-            $incident->load(['utilisateur','commentaires.auteur']);
-            $resolveurs = User::where('role','resolveur')->get();
-            return view('resolveur.incidents.edit', compact('incident','resolveurs'));
-        }
 
         if ($incident->statut !== Incident::STATUT_NOUVEAU) {
             return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de modifier un incident déjà traité.');
@@ -168,28 +148,6 @@ class UserIncidentController extends Controller
     public function update(Request $request, Incident $incident)
     {
         $this->authorize('update', $incident);
-
-        if (Auth::user()->estResolveur()) {
-            $request->validate([
-                'statut'      => 'required|in:nouveau,en_cours,resolu,ferme,résolu,fermé',
-                'commentaire' => 'nullable|string',
-                'attribue_a'  => 'nullable|exists:users,id',
-            ]);
-
-            $incident->attribue_a = $request->attribue_a;
-
-            $incident->setStatusWithLog($request->statut);
-
-            if ($request->filled('commentaire')) {
-                IncidentComment::create([
-                    'incident_id' => $incident->id,
-                    'user_id'     => Auth::id(),
-                    'commentaire' => $request->commentaire,
-                ]);
-            }
-
-            return redirect()->route('resolveur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
-        }
 
         if ($incident->statut !== Incident::STATUT_NOUVEAU) {
             return redirect()->route('utilisateur.incidents.index')->with('error', 'Impossible de mettre à jour un incident déjà traité.');
@@ -222,10 +180,7 @@ class UserIncidentController extends Controller
 
     public function show(Incident $incident)
     {
-        $user = Auth::user();
-        if (!$user->estResolveur() && $incident->utilisateur_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $incident);
         $incident->load(['utilisateur','gestionnaire','commentaires.auteur']);
         return view('utilisateur.incidents.show', compact('incident'));
     }
@@ -249,7 +204,6 @@ class UserIncidentController extends Controller
             'details'     => 'Confirmation par l’utilisateur',
         ]);
 
-        // Mensaje bonito: “Fermé”
         $label = Incident::labelForStatus(Incident::STATUT_FERME);
         return back()->with('success', 'Ticket passé à "' . $label . '".');
     }

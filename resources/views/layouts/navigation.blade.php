@@ -21,7 +21,6 @@
                         <x-nav-link :href="route('admin.resolveurs.index')" :active="request()->routeIs('admin.resolveurs.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Résolveurs') }}
                         </x-nav-link>
-
                     @elseif(auth()->user()->estResolveur())
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Tableau de bord') }}
@@ -29,7 +28,6 @@
                         <x-nav-link :href="route('resolveur.incidents.index')" :active="request()->routeIs('resolveur.incidents.*')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Incidents') }}
                         </x-nav-link>
-
                     @elseif(auth()->user()->estUtilisateur())
                         <x-nav-link :href="route('utilisateur.home')" :active="request()->routeIs('utilisateur.home')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Accueil') }}
@@ -40,6 +38,9 @@
                         <x-nav-link :href="route('utilisateur.incidents.index')" :active="request()->routeIs('utilisateur.incidents.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Mes incidents') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('utilisateur.assistant.index')" :active="request()->routeIs('utilisateur.assistant.index')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
+                            {{ __('Assistant') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-800 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
@@ -49,7 +50,6 @@
 
             <div class="flex items-center space-x-4">
                 @auth
-                    {{-- Ocultamos campana en admin si no hay notificaciones para admin --}}
                     @if(auth()->user()->role !== 'admin')
                         @php $prefix = auth()->user()->estResolveur() ? 'resolveur.' : 'utilisateur.'; @endphp
                         <a href="{{ route($prefix . 'notifications.index') }}" class="relative text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400" aria-label="Notifications">
@@ -83,7 +83,6 @@
                         </x-slot>
                     </x-dropdown>
 
-                    {{-- Botón tema --}}
                     <div x-data="{ darkMode: document.documentElement.classList.contains('dark') }">
                         <button
                             x-on:click="
@@ -92,11 +91,11 @@
                                 else { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; }
                             "
                             class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                            aria-label="Cambiar tema"
-                            title="Cambiar tema"
+                            aria-label="Changer de thème"
+                            title="Changer de thème"
                         >
                             <template x-if="!darkMode">
-                                <img src="{{ asset('sun.webp') }}" alt="Modo claro" class="w-5 h-5" />
+                                <img src="{{ asset('sun.webp') }}" alt="Mode clair" class="w-5 h-5" />
                             </template>
                             <template x-if="darkMode">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -108,7 +107,7 @@
                 @endauth
 
                 <div class="sm:hidden flex items-center">
-                    <button @click="open = !open" class="text-gray-700 dark:text-white focus:outline-none" aria-label="Abrir menú">
+                    <button @click="open = !open" class="text-gray-700 dark:text-white focus:outline-none" aria-label="Ouvrir le menu">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
@@ -117,7 +116,6 @@
             </div>
         </div>
 
-        {{-- Menú móvil --}}
         <div class="sm:hidden mt-2 px-4" x-show="open" x-cloak>
             <div class="flex flex-col space-y-2">
                 @auth
@@ -132,6 +130,7 @@
                         <x-nav-link :href="route('utilisateur.home')" class="block">{{ __('Accueil') }}</x-nav-link>
                         <x-nav-link :href="route('utilisateur.incidents.categories')" class="block">{{ __('Catalogue des incidents') }}</x-nav-link>
                         <x-nav-link :href="route('utilisateur.incidents.index')" class="block">{{ __('Mes incidents') }}</x-nav-link>
+                        <x-nav-link :href="route('utilisateur.assistant.index')" class="block">{{ __('Assistant') }}</x-nav-link>
                         <x-nav-link :href="route('dashboard')" class="block">{{ __('Tableau de bord') }}</x-nav-link>
                     @endif
                 @endauth

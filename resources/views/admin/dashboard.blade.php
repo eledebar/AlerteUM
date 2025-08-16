@@ -7,7 +7,6 @@
 @section('content')
 <div class="max-w-7xl mx-auto p-6">
 
-    {{-- Tarjetas: si $stats incluye FERME/FERMÉ lo mostramos --}}
     @php
         $total   = $stats['TOTAL']   ?? ($stats['total']   ?? null);
         $nouveau = $stats['NOUVEAU'] ?? ($stats['nouveau'] ?? null);

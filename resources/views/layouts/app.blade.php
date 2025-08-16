@@ -79,7 +79,6 @@
         <div class="min-h-screen">
             @include('layouts.navigation')
 
-            {{-- Header compatible: $header (component) o @section('header') --}}
             @if (isset($header))
                 <header class="bg-white shadow dark:bg-gray-800 dark:shadow-md">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -95,7 +94,6 @@
             @endif
 
             <main class="py-6">
-                {{-- Cuerpo compatible: $slot (component) o @yield('content') --}}
                 @isset($slot)
                     {{ $slot }}
                 @else

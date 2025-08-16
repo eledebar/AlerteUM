@@ -36,7 +36,6 @@
                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
         </div>
 
-        {{-- Si no cambias contraseña, deja estos campos vacíos --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium mb-1" for="password">Nouveau mot de passe</label>

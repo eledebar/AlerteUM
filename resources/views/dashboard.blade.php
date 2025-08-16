@@ -45,7 +45,6 @@
                 </div>
             </form>
 
-            {{-- Tarjetas de estado (incluye Fermés) --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-yellow-100 dark:bg-yellow-300/20 p-6 rounded text-center shadow">
                     <h3 class="text-gray-700 dark:text-yellow-300">Nouveaux</h3>

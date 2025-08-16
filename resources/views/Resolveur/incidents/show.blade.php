@@ -4,16 +4,12 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
                 Détail de l'incident
             </h2>
-            <a href="{{ route('resolveur.incidents.edit', $incident) }}"
-               class="inline-flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-700 text-white px-3 py-2">
-                <img src="{{ asset('edit.webp') }}" alt="" class="h-5 w-5"> Modifier
-            </a>
+         
         </div>
     </x-slot>
 
     <div class="py-8 max-w-4xl mx-auto sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 gap-6">
-            {{-- Informations principales --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informations générales</h3>
 
@@ -37,13 +33,11 @@
                 </div>
             </div>
 
-            {{-- Description --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Description</h3>
                 <p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $incident->description }}</p>
             </div>
 
-            {{-- Utilisateur & Gestionnaire --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Utilisateurs</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,7 +56,6 @@
                 </div>
             </div>
 
-            {{-- Commentaires --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Commentaires</h3>
 
@@ -85,13 +78,11 @@
                 @endif
             </div>
 
-            {{-- Historique (con nombres) --}}
             @if(method_exists($incident, 'logs'))
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Historique</h3>
 
                     @php
-                        // Cargamos los usuarios para no hacer N+1 al pintar el actor
                         $logs = $incident->logs()->with('user')->latest()->take(30)->get();
                     @endphp
 
@@ -102,7 +93,6 @@
                                     {{ $log->created_at->format('Y-m-d H:i:s') }} —
                                 </span>
 
-                                {{-- Actor (quien hizo la acción), si existe --}}
                                 @if($log->user)
                                     <span class="text-gray-400">{{ $log->user->name }}</span> ·
                                 @endif

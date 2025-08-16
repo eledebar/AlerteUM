@@ -100,7 +100,6 @@
             <td class="p-3 font-mono" x-text="r.public_id"></td>
             <td class="p-3" x-text="r.titre"></td>
 
-            <!-- Editar prioridad en línea -->
             <td class="p-3">
               <form @submit.prevent="updatePriority(r)" class="flex items-center gap-2">
                 <select x-model="r.priority" class="border rounded p-1 text-xs bg-white dark:bg-gray-800 dark:text-white">
