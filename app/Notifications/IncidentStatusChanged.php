@@ -2,42 +2,24 @@
 
 namespace App\Notifications;
 
-use App\Models\Incident;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use App\Models\Incident;
 
 class IncidentStatusChanged extends Notification
 {
     use Queueable;
-
-    public $incident;
-
-    public function __construct(Incident $incident)
-    {
-        $this->incident = $incident;
-    }
-
-    public function via($notifiable)
-    {
-        return ['mail', 'database']; 
-    }
+    public function __construct(public Incident $incident) {}
+    public function via($notifiable) { return ['mail']; }
 
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject("État de l'incident mis à jour")
-                    ->line("L'état de votre incident '{$this->incident->titre}' a été mis à jour à : {$this->incident->statut}")
-                    ->action('Voir l’incident', route('admin.incidents.show', $this->incident))
-                    ->line('Merci de votre patience.');
-    }
-
-    public function toArray($notifiable)
-    {
-        return [
-            'incident_id' => $this->incident->id,
-            'titre' => $this->incident->titre,
-            'statut' => $this->incident->statut,
-        ];
+            ->subject('Mise à jour du statut de votre incident')
+            ->greeting('Bonjour')
+            ->line('Le statut de votre incident a changé: '.$this->incident->statut)
+            ->action('Voir le ticket', url('/utilisateur/incidents/'.$this->incident->id))
+            ->line('Merci.');
     }
 }

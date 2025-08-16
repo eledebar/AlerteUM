@@ -1,7 +1,6 @@
 @if ($paginator->hasPages())
     <nav role="navigation" aria-label="{{ __('Pagination Navigation') }}" class="flex justify-center">
         <span class="relative z-0 inline-flex shadow-sm rounded-md">
-            {{-- Previous Page Link --}}
             @if ($paginator->onFirstPage())
                 <span aria-disabled="true" aria-label="{{ __('pagination.previous') }}">
                     <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-300 cursor-default rounded-l-md dark:bg-gray-800 dark:border-gray-600 dark:text-gray-500" aria-hidden="true">
@@ -14,16 +13,13 @@
                 </a>
             @endif
 
-            {{-- Pagination Elements --}}
             @foreach ($elements as $element)
-                {{-- "Three Dots" Separator --}}
                 @if (is_string($element))
                     <span aria-disabled="true">
                         <span class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">{{ $element }}</span>
                     </span>
                 @endif
 
-                {{-- Array Of Links --}}
                 @if (is_array($element))
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
@@ -39,7 +35,6 @@
                 @endif
             @endforeach
 
-            {{-- Next Page Link --}}
             @if ($paginator->hasMorePages())
                 <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="relative inline-flex items-center px-3 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 focus:z-10 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700" aria-label="{{ __('pagination.next') }}">
                     ›

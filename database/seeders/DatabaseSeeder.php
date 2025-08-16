@@ -1,136 +1,222 @@
 <?php
+
 namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\Incident;
 use App\Models\IncidentComment;
+use App\Models\IncidentLog;
 
-class DatabaseSeeder extends Seeder {
-    public function run(): void {
-        $admin = User::create(["name" => "Admin","email" => "admin@example.com","password" => Hash::make("admin123"),"role" => "admin"]);
-        $admin2 = User::create(["name" => "Admin2","email" => "elen4cyber@gmail.com","password" => Hash::make("admin123"),"role" => "admin"]);
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            ['name' => 'Admin', 'password' => Hash::make('password'), 'role' => 'admin']
+        );
 
-        $users = [];
-        $users[0] = User::create([
-            "name" => "User",
-            "email" => "user@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[1] = User::create([
-            "name" => "Eledebar",
-            "email" => "eledebar@gmail.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[2] = User::create([
-            "name" => "Marie",
-            "email" => "marie@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[3] = User::create([
-            "name" => "Jean",
-            "email" => "jean@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[4] = User::create([
-            "name" => "Luc",
-            "email" => "luc@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[5] = User::create([
-            "name" => "Sophie",
-            "email" => "sophie@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[6] = User::create([
-            "name" => "Amine",
-            "email" => "amine@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
-        $users[7] = User::create([
-            "name" => "Clara",
-            "email" => "clara@demo.com",
-            "password" => Hash::make("test123"),
-            "role" => "utilisateur",
-        ]);
+        $resolveur = User::updateOrCreate(
+            ['email' => 'elen4cyber@gmail.com'],
+            ['name' => 'Support Elena', 'password' => Hash::make('resol123'), 'role' => 'resolveur']
+        );
 
-       $incidents = [];
+        $supports = [$resolveur];
+        for ($k = 1; $k <= 10; $k++) {
+            $pad = str_pad((string)$k, 3, '0', STR_PAD_LEFT);
+            $supports[] = User::updateOrCreate(
+                ['email' => "support{$pad}@example.com"],
+                ['name' => "Support {$pad}", 'password' => Hash::make('resol123'), 'role' => 'resolveur']
+            );
+        }
 
-        $data = [
-            ["Accès à la base Scopus indisponible", "L'accès à la base de données Scopus échoue malgré une connexion VPN.", 'enseignement', 'Accès à bases de données'],
-            ["Mot de passe refusé malgré réinitialisation", "Après réinitialisation, le mot de passe n’est toujours pas accepté.", 'acces', 'Problèmes de mot de passe'],
-            ["Erreur sur le drive partagé du département", "Impossible d'accéder aux documents partagés sur le drive pédagogique.", 'communication', 'Outils collaboratifs'],
-            ["Site Moodle inaccessible depuis campus", "Tentative de connexion à Moodle échoue systématiquement depuis le campus.", 'plateformes', 'Sites web universitaires'],
-            ["Logiciel statistique non installé", "SPSS n’est pas disponible sur les ordinateurs du labo de psycho.", 'equipements', 'Logiciels manquants'],
-            ["Calendrier non synchronisé sur téléphone", "Le calendrier universitaire ne se synchronise pas avec l’appli mobile.", 'communication', 'Outils collaboratifs'],
-            ["Connexion Wi-Fi instable bâtiment D", "La connexion saute toutes les 5 minutes au 3ème étage du bâtiment D.", 'acces', 'Connexion Internet'],
-            ["Demande d’aide pour configurer Zoom", "Je souhaite utiliser Zoom pour mon cours mais je n’arrive pas à l’installer.", 'assistance', 'Orientation numérique'],
-            ["Erreur lors du dépôt d’un formulaire Erasmus", "Le bouton de soumission du formulaire Erasmus ne réagit pas.", 'plateformes', 'Formulaires en ligne'],
-            ["Problème de licence sur AutoCAD", "AutoCAD signale que la licence a expiré lors du lancement.", 'equipements', 'Problème de licence'],
-            ["Besoin d’assistance pour Moodle", "Je ne comprends pas comment rendre un devoir sur Moodle.", 'assistance', 'Demande d’assistance'],
-            ["Scanner de la bibliothèque HS", "Le scanner près de la salle informatique ne fonctionne plus.", 'equipements', 'Matériel défectueux'],
-            ["Accès refusé à ScienceDirect", "Message d’erreur lors de la tentative d'accès à ScienceDirect.", 'enseignement', 'Accès à bases de données'],
-            ["Impossible de modifier mon mot de passe ENT", "Le formulaire de changement de mot de passe ne fonctionne pas.", 'acces', 'Problèmes de mot de passe'],
-            ["Documents introuvables sur Teams", "Les fichiers de TD ne sont pas visibles sur Teams.", 'communication', 'Outils collaboratifs'],
-            ["Formulaire de stage vide après chargement", "Aucune donnée ne s'affiche dans le formulaire de stage.", 'plateformes', 'Formulaires en ligne'],
-            ["Photos floues sur le portail étudiant", "Les images affichées sur le portail sont pixelisées.", 'plateformes', 'Sites web universitaires'],
-            ["Aide pour installation VPN", "Je ne sais pas comment installer le VPN de l’université.", 'assistance', 'Orientation numérique'],
-            ["Erreur 403 sur le drive partagé", "Accès refusé à certains dossiers partagés sur le drive.", 'communication', 'Outils collaboratifs'],
-            ["Connexion Ethernet absente salle B12", "Impossible de se connecter via câble réseau en salle B12.", 'acces', 'Connexion Internet'],
-            ["Bug lors de l'enregistrement des voeux", "Les choix de spécialité ne sont pas enregistrés sur le formulaire.", 'plateformes', 'Formulaires en ligne'],
-            ["Logiciel de gestion non activé", "Sage ne démarre pas, message ‘licence invalide’.", 'equipements', 'Problème de licence'],
-            ["Imprimante défectueuse en salle profs", "L’imprimante affiche une erreur permanente de bourrage papier.", 'equipements', 'Matériel défectueux'],
-            ["VPN coupe les connexions au bout de 10 min", "Déconnexion automatique du VPN sans message d’erreur.", 'acces', 'Connexion Internet'],
-            ["Je ne comprends pas le fonctionnement de l’ENT", "Besoin d’aide pour naviguer sur le portail ENT.", 'assistance', 'Demande d’assistance'],
+        $utilisateurs = [];
+        $utilisateurs[] = User::updateOrCreate(
+            ['email' => 'user@demo.com'],
+            ['name' => 'User', 'password' => Hash::make('test123'), 'role' => 'utilisateur']
+        );
+        $eledebar = User::updateOrCreate(
+            ['email' => 'eledebar@gmail.com'],
+            ['name' => 'Eledebar', 'password' => Hash::make('test123'), 'role' => 'utilisateur']
+        );
+        $utilisateurs[] = $eledebar;
+        for ($u = 1; $u <= 10; $u++) {
+            $pad = str_pad((string)$u, 3, '0', STR_PAD_LEFT);
+            $utilisateurs[] = User::updateOrCreate(
+                ['email' => "utilisateur{$pad}@demo.com"],
+                ['name' => "Utilisateur {$pad}", 'password' => Hash::make('test123'), 'role' => 'utilisateur']
+            );
+        }
+
+        $lignes = [
+            ['Accès à la base Scopus indisponible', "L'accès à la base de données Scopus échoue malgré une connexion VPN.", 'enseignement', 'Accès à bases de données'],
+            ['Mot de passe refusé malgré réinitialisation', "Après réinitialisation, le mot de passe n’est toujours pas accepté.", 'acces', 'Problèmes de mot de passe'],
+            ["Erreur sur le drive partagé du département", "Impossible d'accéder aux documents partagés.", 'communication', 'Outils collaboratifs'],
+            ['Site Moodle inaccessible depuis campus', "Moodle inaccessbile depuis le campus.", 'plateformes', 'Sites web universitaires'],
+            ['Logiciel statistique non installé', "SPSS indisponible dans le labo.", 'equipements', 'Logiciels manquants'],
+            ['Calendrier non synchronisé', "Le calendrier ne se synchronise pas.", 'communication', 'Outils collaboratifs'],
+            ['Connexion Wi-Fi instable', "La connexion saute régulièrement.", 'acces', 'Connexion Internet'],
+            ["Aide pour Zoom", "Besoin d’aide pour installer Zoom.", 'assistance', 'Orientation numérique'],
+            ["Erreur formulaire Erasmus", "Le bouton de soumission ne réagit pas.", 'plateformes', 'Formulaires en ligne'],
+            ['Licence AutoCAD expirée', "AutoCAD indique une licence expirée.", 'equipements', 'Problème de licence'],
+            ["Assistance Moodle", "Comment rendre un devoir sur Moodle ?", 'assistance', 'Demande d’assistance'],
         ];
 
-        foreach ($data as $i => [$titre, $description, $categorie, $type]) {
-            $user = $users[$i % count($users)];
-            $adminRef = $i % 2 === 0 ? $admin : $admin2;
-            $statuts = ['nouveau', 'en_cours', 'résolu'];
+        $delaisHeures = ['low'=>72,'medium'=>48,'high'=>8,'critical'=>4];
+        $priorites = ['low','medium','high','critical'];
 
-            $incidents[$i] = Incident::create([
+        foreach ($lignes as $i => [$titre, $description, $categorie, $type]) {
+            $user = $utilisateurs[$i % count($utilisateurs)];
+            $res  = $supports[$i % count($supports)];
+            $prio = $priorites[$i % count($priorites)];
+
+            $statut = match (true) {
+                $i % 17 === 0 => 'fermé',
+                $i % 11 === 0 => 'résolu',
+                $i % 5 === 0  => 'nouveau',
+                default       => 'en_cours',
+            };
+
+            $hours = $delaisHeures[$prio];
+            $ok = ($i % 3 !== 0);
+            $cree = $ok ? now()->subHours(intval($hours/2) + ($i%6)) : now()->subHours($hours + 2 + ($i%6));
+            $due  = (clone $cree)->addHours($hours);
+
+            $incident = Incident::create([
                 'titre' => $titre,
                 'description' => $description,
                 'categorie' => $categorie,
                 'type' => $type,
-                'statut' => $statuts[$i % 3],
+                'statut' => 'nouveau',
+                'priority' => $prio,
                 'utilisateur_id' => $user->id,
-                'attribue_a' => $adminRef->id,
+                'attribue_a' => $res->id,
+                'sla_due_at' => in_array($statut, ['résolu','resolu','fermé','ferme']) ? null : $due,
             ]);
+
+            $incident->created_at = $cree;
+            $incident->updated_at = (clone $cree)->addMinutes(2);
+            $incident->save();
+
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $user->id,
+                'action'      => 'created',
+                'details'     => 'Création par l’utilisateur',
+            ]);
+
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'action'      => 'assigned',
+                'details'     => 'Pris en charge par '.$res->name,
+            ]);
+
+            if ($statut !== 'nouveau') {
+                IncidentLog::create([
+                    'incident_id' => $incident->id,
+                    'user_id'     => $res->id,
+                    'action'      => 'status_changed',
+                    'from_status' => 'nouveau',
+                    'to_status'   => $statut,
+                    'details'     => '',
+                ]);
+                $incident->statut = $statut;
+                $incident->save();
+            }
+
+            $comment = IncidentComment::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'commentaire' => "Prise en charge par {$res->name}.",
+            ]);
+
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'action'      => 'comment_added',
+                'details'     => "Commentaire ajouté",
+            ]);
+        }
+
+        $sujets = [
+            ['Problème ENT', 'assistance', 'Demande d’assistance'],
+            ['Connexion Wi-Fi', 'acces', 'Connexion Internet'],
+            ['Drive partagé', 'communication', 'Outils collaboratifs'],
+            ['Erreur formulaire', 'plateformes', 'Formulaires en ligne'],
+            ['Licence invalide', 'equipements', 'Problème de licence'],
+            ['Accès base', 'enseignement', 'Accès à bases de données'],
+        ];
+
+        for ($i = 1; $i <= 30; $i++) {
+            [$titreBase, $cat, $type] = $sujets[$i % count($sujets)];
+            $titre = $titreBase.' #'.str_pad((string)$i, 3, '0', STR_PAD_LEFT);
+            $res = $supports[$i % count($supports)];
+            $prio = $priorites[$i % count($priorites)];
+            $statut = $i % 9 === 0 ? 'résolu' : ($i % 14 === 0 ? 'fermé' : 'en_cours');
+
+            $hours = $delaisHeures[$prio];
+            $cree = now()->subHours(($hours/2) + ($i%5));
+            $due  = (clone $cree)->addHours($hours);
+
+            $incident = Incident::create([
+                'titre' => $titre,
+                'description' => 'Incident généré pour démonstration.',
+                'categorie' => $cat,
+                'type' => $type,
+                'statut' => 'nouveau',
+                'priority' => $prio,
+                'utilisateur_id' => $eledebar->id,
+                'attribue_a' => $res->id,
+                'sla_due_at' => in_array($statut, ['résolu','resolu','fermé','ferme']) ? null : $due,
+            ]);
+
+            $incident->created_at = $cree;
+            $incident->updated_at = (clone $cree)->addMinutes(3);
+            $incident->save();
+
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $eledebar->id,
+                'action'      => 'created',
+                'details'     => 'Création par l’utilisateur',
+            ]);
+
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'action'      => 'assigned',
+                'details'     => 'Pris en charge par '.$res->name,
+            ]);
+
+            if ($statut !== 'nouveau') {
+                IncidentLog::create([
+                    'incident_id' => $incident->id,
+                    'user_id'     => $res->id,
+                    'action'      => 'status_changed',
+                    'from_status' => 'nouveau',
+                    'to_status'   => $statut,
+                    'details'     => '',
+                ]);
+                $incident->statut = $statut;
+                $incident->save();
+            }
 
             IncidentComment::create([
-                'incident_id' => $incidents[$i]->id,
-                'user_id' => $adminRef->id,
-                'commentaire' => "Merci pour votre signalement, nous analysons le problème.",
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'commentaire' => "Suivi par {$res->name}.",
             ]);
 
-            if ($i % 3 === 0) {
-                IncidentComment::create([
-                    'incident_id' => $incidents[$i]->id,
-                    'user_id' => $adminRef->id,
-                    'commentaire' => "Le problème a été transmis à l’équipe concernée.",
-                ]);
-            } elseif ($i % 3 === 1) {
-                IncidentComment::create([
-                    'incident_id' => $incidents[$i]->id,
-                    'user_id' => $adminRef->id,
-                    'commentaire' => "Une solution est en cours de test.",
-                ]);
-            } else {
-                IncidentComment::create([
-                    'incident_id' => $incidents[$i]->id,
-                    'user_id' => $adminRef->id,
-                    'commentaire' => "Le dysfonctionnement est maintenant résolu.",
-                ]);
-            }
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => $res->id,
+                'action'      => 'comment_added',
+                'details'     => "Commentaire ajouté",
+            ]);
         }
     }
 }

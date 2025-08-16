@@ -15,36 +15,38 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $filtreAssigne = $request->query('assigned') === 'me';
-        $dateFrom = $request->query('from');
-        $dateTo = $request->query('to');
 
-        $isValidDateRange = $dateFrom && $dateTo && strtotime($dateFrom) <= strtotime($dateTo);
+        $dateFrom = $request->input('date_debut', $request->input('from'));
+        $dateTo   = $request->input('date_fin',   $request->input('to'));
+        $fromTs = $dateFrom ? strtotime($dateFrom) : false;
+        $toTs   = $dateTo   ? strtotime($dateTo)   : false;
+        $isValidDateRange = ($fromTs !== false) && ($toTs !== false) && ($fromTs <= $toTs);
 
-        if ($user->estAdmin()) {
+        if ($user->role === 'admin') {
             $query = Incident::query();
-
             if ($filtreAssigne) {
                 $query->where('attribue_a', $user->id);
             }
-
-            if ($isValidDateRange) {
-                $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        } elseif ($user->estResolveur()) {
+            $query = Incident::query();
+            if ($filtreAssigne) {
+                $query->where('attribue_a', $user->id);
             }
-
         } elseif ($user->estUtilisateur()) {
             $query = $user->incidents();
-
-            if ($isValidDateRange) {
-                $query->whereBetween('created_at', [$dateFrom, $dateTo]);
-            }
         } else {
             abort(403, 'Rôle non autorisé.');
+        }
+
+        if ($isValidDateRange) {
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
         }
 
         $nouveaux = (clone $query)->where('statut', 'nouveau')->count();
         $enCours  = (clone $query)->where('statut', 'en_cours')->count();
         $resolus  = (clone $query)->where('statut', 'résolu')->count();
-        $total    = $nouveaux + $enCours + $resolus;
+        $fermes   = (clone $query)->whereIn('statut', ['fermé', 'ferme'])->count(); 
+        $total    = $nouveaux + $enCours + $resolus + $fermes;
 
         $parCategorie = (clone $query)
             ->select('categorie', DB::raw('count(*) as total'))
@@ -58,7 +60,9 @@ class DashboardController extends Controller
             ->orderBy('date')
             ->get();
 
-        $parUtilisateur = $user->estAdmin() ? (clone $query)
+        $mostrarPorUsuario = ($user->role === 'admin') || $user->estResolveur();
+
+        $parUtilisateur = $mostrarPorUsuario ? (clone $query)
             ->select('attribue_a', DB::raw('count(*) as total'))
             ->whereNotNull('attribue_a')
             ->groupBy('attribue_a')
@@ -66,7 +70,7 @@ class DashboardController extends Controller
             ->map(function ($item) {
                 $assignedUser = User::find($item->attribue_a);
                 return [
-                    'name' => $assignedUser?->name ?? 'Non assigné',
+                    'name'  => $assignedUser?->name ?? 'Non assigné',
                     'total' => $item->total,
                 ];
             }) : collect();
@@ -76,7 +80,7 @@ class DashboardController extends Controller
             ->paginate(10);
 
         return view('dashboard', compact(
-            'nouveaux', 'enCours', 'resolus', 'total',
+            'nouveaux', 'enCours', 'resolus', 'fermes', 'total',
             'parCategorie', 'evolution', 'parUtilisateur', 'incidents'
         ));
     }
@@ -84,14 +88,26 @@ class DashboardController extends Controller
     public function exportCsv(Request $request)
     {
         $user = Auth::user();
-        $query = $user->estAdmin() ? Incident::query() : $user->incidents();
 
-        if ($request->query('assigned') === 'me') {
-            $query->where('attribue_a', $user->id);
+        if ($user->role === 'admin' || $user->estResolveur()) {
+            $query = Incident::query();
+            if ($request->query('assigned') === 'me') {
+                $query->where('attribue_a', $user->id);
+            }
+        } else {
+            $query = $user->incidents();
         }
 
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [$request->query('from'), $request->query('to')]);
+        $from = $request->input('date_debut', $request->input('from'));
+        $to   = $request->input('date_fin',   $request->input('to'));
+        $fromTs = $from ? strtotime($from) : false;
+        $toTs   = $to   ? strtotime($to)   : false;
+        if (($fromTs !== false) && ($toTs !== false) && ($fromTs <= $toTs)) {
+            $query->whereBetween('created_at', [$from, $to]);
+        }
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->query('statut'));
         }
 
         $incidents = $query->orderBy('created_at', 'desc')->get();
@@ -101,16 +117,16 @@ class DashboardController extends Controller
             $csv .= sprintf(
                 "%d,%s,%s,%s,%s\n",
                 $incident->id,
-                $incident->created_at->format('Y-m-d'),
+                optional($incident->created_at)->format('Y-m-d'),
                 $incident->statut,
                 $incident->categorie,
-                $incident->attribue_a ? User::find($incident->attribue_a)?->name ?? 'Non assigné' : 'Non assigné'
+                $incident->attribue_a ? (User::find($incident->attribue_a)?->name ?? 'Non assigné') : 'Non assigné'
             );
         }
 
         return Response::make($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="incidents.csv"',
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=\"incidents.csv\"',
         ]);
     }
 }

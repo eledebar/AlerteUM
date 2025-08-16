@@ -29,7 +29,7 @@ class NouvelleIncidentCree extends Notification
     {
         return [
             'message' => 'Nouvelle incidence créée: « ' . $this->incident->titre . ' » par ' . $this->incident->utilisateur->name,
-            'url' => route('admin.incidents.show', $this->incident->id),
+            'url' => route('resolveur.incidents.show', $this->incident->id),
         ];
     }
 
@@ -40,7 +40,7 @@ class NouvelleIncidentCree extends Notification
             ->greeting('Bonjour ' . $notifiable->name . ',')
             ->line('Une nouvelle incidence a été créée:')
             ->line('Titre: ' . $this->incident->titre)
-            ->action('Voir l\'incident', route('admin.incidents.show', $this->incident->id))
+            ->action('Voir l\'incident', route('resolveur.incidents.show', $this->incident->id))
             ->line('Merci d\'utiliser notre application.');
     }
 }
