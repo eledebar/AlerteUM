@@ -92,22 +92,17 @@
                         @if ($incident->commentaires->isEmpty())
                             <div class="mt-3 text-gray-600 dark:text-gray-300">Aucun commentaire.</div>
                         @else
-                            <ol class="relative mt-4 border-s border-gray-200 dark:border-gray-700">
+                            <div class="mt-4 space-y-4">
                                 @foreach ($incident->commentaires as $c)
-                                    <li class="mb-6 ms-6">
-                                        <span class="absolute -start-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white text-xs shadow ring-2 ring-white dark:ring-gray-900">
-                                            {{ strtoupper(mb_substr($c->auteur->name ?? 'U', 0, 1)) }}
-                                        </span>
-                                        <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                <strong class="text-gray-700 dark:text-gray-200">{{ $c->auteur->name ?? '—' }}</strong>
-                                                · {{ $c->created_at->format('d/m/Y H:i') }}
-                                            </div>
-                                            <div class="mt-1 leading-relaxed">{{ $c->commentaire }}</div>
+                                    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-3">
+                                        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <strong class="text-gray-700 dark:text-gray-200">{{ $c->auteur->name ?? '—' }}</strong>
+                                            <span>{{ $c->created_at->format('d/m/Y H:i') }}</span>
                                         </div>
-                                    </li>
+                                        <div class="mt-1 leading-relaxed text-gray-900 dark:text-gray-100">{{ $c->commentaire }}</div>
+                                    </div>
                                 @endforeach
-                            </ol>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -116,82 +111,48 @@
             @if ($showActionPanel)
                 <div class="lg:col-span-1">
                     <div class="lg:sticky lg:top-24">
-                        <section
-                            class="rounded-2xl border border-amber-300/60 shadow-sm
-                                   bg-gradient-to-br from-amber-50 to-amber-100
-                                   dark:from-amber-900/20 dark:to-amber-800/10 dark:border-amber-700/50">
+                        <section class="rounded-2xl border border-amber-300/60 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 dark:border-amber-700/50">
                             <header class="flex items-start gap-3 px-5 pt-5">
-                                <div class="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl
-                                            bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/30">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M12 3l7 4v5c0 4.418-2.239 7.5-7 9-4.761-1.5-7-4.582-7-9V7l7-4z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M9.5 12.5l2 2 4-4"/>
+                                <div class="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/30">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 4.418-2.239 7.5-7 9-4.761-1.5-7-4.582-7-9V7l7-4z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 12.5l2 2 4-4"/>
                                     </svg>
                                 </div>
                                 <div class="pt-0.5">
-                                    <h3 class="font-semibold text-amber-900 dark:text-amber-100">
-                                        Le ticket est-il vraiment résolu ?
-                                    </h3>
-                                    <p class="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">
-                                        Confirmez si tout fonctionne. Vous pouvez aussi réouvrir en nous expliquant le problème.
-                                    </p>
+                                    <h3 class="font-semibold text-amber-900 dark:text-amber-100">Le ticket est-il vraiment résolu ?</h3>
+                                    <p class="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">Confirmez si tout fonctionne. Vous pouvez aussi réouvrir en nous expliquant le problème.</p>
                                 </div>
                             </header>
 
                             <div class="px-5 pb-5 pt-4 space-y-3">
                                 <form method="POST" action="{{ route('utilisateur.incidents.confirmClose', $incident) }}">
                                     @csrf
-                                    <button type="submit"
-                                            class="w-full group relative overflow-hidden rounded-xl px-4 py-3
-                                                   bg-emerald-600 text-white font-medium
-                                                   shadow-sm ring-1 ring-inset ring-emerald-500/50
-                                                   hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400
-                                                   transition">
-                                        <span class="absolute inset-0 opacity-0 group-hover:opacity-10
-                                                     bg-white transition"></span>
+                                    <button type="submit" class="w-full group relative overflow-hidden rounded-xl px-4 py-3 bg-emerald-600 text-white font-medium shadow-sm ring-1 ring-inset ring-emerald-500/50 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition">
+                                        <span class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-white transition"></span>
                                         <span class="inline-flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                 class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M9 12l2 2 4-4M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                                             </svg>
                                             Oui, fermer définitivement
                                         </span>
                                     </button>
                                 </form>
 
-                                <details
-                                    class="rounded-xl border border-rose-300/70 bg-white/60 dark:bg-gray-900/60
-                                           dark:border-rose-700/50 open:ring-1 open:ring-rose-400/30">
-                                    <summary
-                                        class="list-none cursor-pointer rounded-t-xl px-4 py-3
-                                               bg-rose-600 text-white font-medium
-                                               hover:bg-rose-500 transition">
+                                <details class="rounded-xl border border-rose-300/70 bg-white/60 dark:bg-gray-900/60 dark:border-rose-700/50 open:ring-1 open:ring-rose-400/30">
+                                    <summary class="list-none cursor-pointer rounded-t-xl px-4 py-3 bg-rose-600 text-white font-medium hover:bg-rose-500 transition">
                                         <span class="inline-flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                 class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M15 9l-6 6M9 9l6 6M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                                             </svg>
                                             Non, le problème persiste
                                         </span>
                                     </summary>
-                                    <form method="POST" action="{{ route('utilisateur.incidents.rejectClose', $incident) }}"
-                                          class="p-4 space-y-3">
+                                    <form method="POST" action="{{ route('utilisateur.incidents.rejectClose', $incident) }}" class="p-4 space-y-3">
                                         @csrf
-                                        <label for="reason" class="text-sm text-gray-700 dark:text-gray-300">
-                                            Expliquez brièvement ce qui ne fonctionne pas :
-                                        </label>
-                                        <textarea id="reason" name="reason" rows="4" required
-                                                  class="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2
-                                                         text-gray-900 dark:text-gray-100 dark:bg-gray-800
-                                                         focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
-                                        <button
-                                            class="w-full rounded-lg bg-rose-600 px-4 py-2 font-medium text-white
-                                                   hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400 transition">
+                                        <label for="reason" class="text-sm text-gray-700 dark:text-gray-300">Expliquez brièvement ce qui ne fonctionne pas :</label>
+                                        <textarea id="reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+                                        <button class="w-full rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400 transition">
                                             Envoyer et rouvrir
                                         </button>
                                     </form>

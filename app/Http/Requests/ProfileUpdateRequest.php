@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    
     public function rules(): array
     {
         return [
@@ -16,11 +15,11 @@ class ProfileUpdateRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
-                'lowercase',
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8192'],
         ];
     }
 }

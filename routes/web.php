@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\AdminIncidentController;
 use App\Http\Controllers\Admin\AdminResolveurController;
 
 use App\Http\Controllers\AssistantController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -33,6 +34,10 @@ require __DIR__ . '/auth.php';
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/export.csv', [ExportController::class, 'incidentsCsv'])->name('dashboard.export.csv');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::prefix('utilisateur')->as('utilisateur.')->middleware('role:utilisateur')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -122,6 +127,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/incidents/export-admin.csv', [ExportController::class, 'incidentsCsv'])->name('incidents.export.csv');
     });
 });
+
+
+Route::get('/media/avatar/{user}', [AvatarController::class, 'show'])
+    ->name('avatars.show')
+    ->middleware(['signed','auth','throttle:60,1']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');

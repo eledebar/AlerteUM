@@ -1,9 +1,8 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+<nav x-data="{ open: false, darkMode: document.documentElement.classList.contains('dark') }" class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-
             <div class="flex items-center space-x-3">
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
+                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2" aria-label="Aller au tableau de bord">
                     <img src="{{ asset('logo-um.webp') }}" alt="Logo" class="h-9 w-auto object-contain" style="max-height: 36px;">
                     <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">AlerteUM</span>
                 </a>
@@ -64,8 +63,8 @@
 
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button class="flex items-center font-medium text-sm text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">
-                                {{ Auth::user()->name }}
+                            <button class="flex items-center font-medium text-sm text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none" aria-label="Ouvrir le menu utilisateur">
+                                <span class="ml-0">{{ Auth::user()->name }}</span>
                                 <svg class="ml-1 h-4 w-4 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                     <path d="M5.293 7.293L10 12l4.707-4.707-1.414-1.414L10 9.172 6.707 5.879 5.293 7.293z" />
                                 </svg>
@@ -73,37 +72,38 @@
                         </x-slot>
 
                         <x-slot name="content">
+                            <x-dropdown-link :href="route('profile.edit')">
+                                {{ __('Profil') }}
+                            </x-dropdown-link>
+
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <x-dropdown-link :href="route('logout')"
-                                                 onclick="event.preventDefault(); this.closest('form').submit();">
+                                <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                                     {{ __('Se déconnecter') }}
                                 </x-dropdown-link>
                             </form>
                         </x-slot>
                     </x-dropdown>
 
-                    <div x-data="{ darkMode: document.documentElement.classList.contains('dark') }">
-                        <button
-                            x-on:click="
-                                darkMode = !darkMode;
-                                if (darkMode) { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; }
-                                else { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; }
-                            "
-                            class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                            aria-label="Changer de thème"
-                            title="Changer de thème"
-                        >
-                            <template x-if="!darkMode">
-                                <img src="{{ asset('sun.webp') }}" alt="Mode clair" class="w-5 h-5" />
-                            </template>
-                            <template x-if="darkMode">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
-                                </svg>
-                            </template>
-                        </button>
-                    </div>
+                    <button
+                        x-on:click="
+                            darkMode = !darkMode;
+                            if (darkMode) { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; }
+                            else { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; }
+                        "
+                        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        aria-label="Changer de thème"
+                        title="Changer de thème"
+                    >
+                        <template x-if="!darkMode">
+                            <img src="{{ asset('sun.webp') }}" alt="Mode clair" class="w-5 h-5" />
+                        </template>
+                        <template x-if="darkMode">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                            </svg>
+                        </template>
+                    </button>
                 @endauth
 
                 <div class="sm:hidden flex items-center">
@@ -133,6 +133,7 @@
                         <x-nav-link :href="route('utilisateur.assistant.index')" class="block">{{ __('Assistant') }}</x-nav-link>
                         <x-nav-link :href="route('dashboard')" class="block">{{ __('Tableau de bord') }}</x-nav-link>
                     @endif
+                    <x-nav-link :href="route('profile.edit')" class="block">{{ __('Profil') }}</x-nav-link>
                 @endauth
             </div>
         </div>
