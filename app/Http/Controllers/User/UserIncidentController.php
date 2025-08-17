@@ -9,6 +9,7 @@ use App\Models\IncidentComment;
 use App\Models\IncidentLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use App\Notifications\IncidentReopenedByUser;
 use App\Notifications\IncidentCreated;
 
@@ -18,16 +19,64 @@ class UserIncidentController extends Controller
     {
         $user = Auth::user();
 
-        $incidents = Incident::query()
-            ->where('utilisateur_id', $user->id)
-            ->filter($request)
-            ->sorted($request)
-            ->with(['assignedUser','utilisateur','lastLog'])
-            ->paginate(10)
-            ->withQueryString();
+        $q = Incident::query()->where('utilisateur_id', $user->id);
 
-        $typesDisponibles = Incident::where('utilisateur_id', $user->id)
-            ->distinct()->pluck('type')->filter()->values();
+        $statut = $request->query('statut');
+        if ($statut !== null && $statut !== '') {
+            $q->where('statut', $statut);
+        }
+
+        $prio = strtolower($request->query('priority', $request->query('priorite', '')));
+        if ($prio !== '') {
+            $q->where(function ($qq) use ($prio) {
+                $qq->whereRaw('lower(priority) = ?', [$prio]);
+                if (Schema::hasColumn('incidents', 'priorite')) {
+                    $qq->orWhereRaw('lower(priorite) = ?', [$prio]);
+                }
+            });
+        }
+
+        $de = $request->query('from');
+        $a  = $request->query('to');
+        if ($de && $a) {
+            $q->whereBetween('created_at', [$de.' 00:00:00', $a.' 23:59:59']);
+        } elseif ($de) {
+            $q->where('created_at', '>=', $de.' 00:00:00');
+        } elseif ($a) {
+            $q->where('created_at', '<=', $a.' 23:59:59');
+        }
+
+        $terme = trim((string) $request->query('q', ''));
+        if ($terme !== '') {
+            $termeSansEspaces = preg_replace('/\s+/', '', $terme);
+            $termeUpper = strtoupper($termeSansEspaces);
+            $chiffres = preg_replace('/\D+/', '', $termeUpper);
+            $idNum = $chiffres !== '' ? (int) ltrim($chiffres, '0') : null;
+
+            $q->where(function ($qq) use ($terme, $idNum) {
+                $qq->where('titre', 'like', '%'.$terme.'%')
+                   ->orWhere('description', 'like', '%'.$terme.'%')
+                   ->orWhere('public_id', 'like', '%'.$terme.'%');
+                if ($idNum !== null && $idNum > 0) {
+                    $qq->orWhere('id', $idNum);
+                }
+            });
+        }
+
+        $trisAutorises = ['created_at','priority','priorite','statut','escalation_level','sla_due_at','public_id','titre','id'];
+        $triDemande = $request->query('sort');
+        if ($triDemande === 'priorite' && !Schema::hasColumn('incidents', 'priorite')) {
+            $triDemande = 'priority';
+        }
+        $tri = in_array($triDemande, $trisAutorises, true) ? $triDemande : 'created_at';
+        $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+        $q->orderBy($tri, $dir);
+
+        $q->with(['assignedUser','utilisateur','lastLog']);
+
+        $incidents = $q->paginate(10)->withQueryString();
+
+        $typesDisponibles = Incident::where('utilisateur_id', $user->id)->distinct()->pluck('type')->filter()->values();
 
         return view('utilisateur.incidents.index', compact('incidents','typesDisponibles'));
     }
@@ -36,12 +85,52 @@ class UserIncidentController extends Controller
     {
         $user = Auth::user();
 
-        $rows = Incident::query()
-            ->where('utilisateur_id', $user->id)
-            ->filter($request)
-            ->sorted($request)
-            ->with(['assignedUser','utilisateur'])
-            ->get();
+        $q = Incident::query()->where('utilisateur_id', $user->id);
+
+        $statut = $request->query('statut');
+        if ($statut !== null && $statut !== '') {
+            $q->where('statut', $statut);
+        }
+
+        $prio = strtolower($request->query('priority', $request->query('priorite', '')));
+        if ($prio !== '') {
+            $q->where(function ($qq) use ($prio) {
+                $qq->whereRaw('lower(priority) = ?', [$prio]);
+                if (Schema::hasColumn('incidents', 'priorite')) {
+                    $qq->orWhereRaw('lower(priorite) = ?', [$prio]);
+                }
+            });
+        }
+
+        $de = $request->query('from');
+        $a  = $request->query('to');
+        if ($de && $a) {
+            $q->whereBetween('created_at', [$de.' 00:00:00', $a.' 23:59:59']);
+        } elseif ($de) {
+            $q->where('created_at', '>=', $de.' 00:00:00');
+        } elseif ($a) {
+            $q->where('created_at', '<=', $a.' 23:59:59');
+        }
+
+        $terme = trim((string) $request->query('q', ''));
+        if ($terme !== '') {
+            $termeSansEspaces = preg_replace('/\s+/', '', $terme);
+            $termeUpper = strtoupper($termeSansEspaces);
+            $chiffres = preg_replace('/\D+/', '', $termeUpper);
+            $idNum = $chiffres !== '' ? (int) ltrim($chiffres, '0') : null;
+
+            $q->where(function ($qq) use ($terme, $idNum) {
+                $qq->where('titre', 'like', '%'.$terme.'%')
+                   ->orWhere('description', 'like', '%'.$terme.'%')
+                   ->orWhere('public_id', 'like', '%'.$terme.'%');
+                if ($idNum !== null && $idNum > 0) {
+                    $qq->orWhere('id', $idNum);
+                }
+            });
+        }
+
+        $q->with(['assignedUser','utilisateur']);
+        $rows = $q->get();
 
         $handle = fopen('php://temp', 'r+');
         fputcsv($handle, ['Code','Titre','Priorité','Statut','Assigné à','Créé','SLA']);
@@ -130,8 +219,7 @@ class UserIncidentController extends Controller
 
         $request->user()->notify(new IncidentCreated($incident));
 
-        return redirect()->route('utilisateur.incidents.show', $incident)
-            ->with('success', 'Incident créé avec succès.');
+        return redirect()->route('utilisateur.incidents.show', $incident)->with('success', 'Incident créé avec succès.');
     }
 
     public function edit(Incident $incident)
@@ -205,7 +293,7 @@ class UserIncidentController extends Controller
         ]);
 
         $label = Incident::labelForStatus(Incident::STATUT_FERME);
-        return back()->with('success', 'Ticket passé à "' . $label . '".');
+        return back()->with('success', 'Ticket passé à "'.$label.'".');
     }
 
     public function rejectClose(Incident $incident, Request $request)
@@ -237,6 +325,6 @@ class UserIncidentController extends Controller
         }
 
         $label = Incident::labelForStatus(Incident::STATUT_EN_COURS);
-        return back()->with('success', 'Réouvert. Le ticket revient à "' . $label . '".');
+        return back()->with('success', 'Réouvert. Le ticket revient à "'.$label.'".');
     }
 }

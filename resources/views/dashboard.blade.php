@@ -90,12 +90,6 @@
                     <canvas id="dateChart" class="w-full max-h-[350px]"></canvas>
                 </div>
 
-                @if(auth()->user()->role === 'admin' || auth()->user()->estResolveur())
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Répartition par utilisateur</h3>
-                        <canvas id="userChart" class="w-full max-h-[350px]"></canvas>
-                    </div>
-                @endif
             </div>
         </div>
     </div>

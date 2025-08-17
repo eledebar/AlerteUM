@@ -52,7 +52,7 @@
 
         <div class="flex items-center justify-end gap-3">
             <a href="{{ route('admin.resolveurs.index') }}" class="px-4 py-2 rounded-md border">
-                Annuler
+                Retour
             </a>
             <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white">
                 Enregistrer

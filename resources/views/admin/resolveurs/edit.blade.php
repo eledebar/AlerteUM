@@ -2,7 +2,7 @@
 
 @section('header')
     <h2 class="font-semibold text-xl leading-tight">
-        Modifier le résolveur #{{ $user->id }}
+        Modifier le résolveur {{ $user->name }}
     </h2>
 @endsection
 
@@ -18,7 +18,13 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.resolveurs.update', $user) }}" class="space-y-6 bg-white dark:bg-gray-900 p-6 rounded-lg border">
+    @if (session('success'))
+        <div class="mb-6 rounded-md border border-green-300 bg-green-50 p-4 text-green-800">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <form id="update-form" method="POST" action="{{ route('admin.resolveurs.update', $user) }}" class="space-y-6 bg-white dark:bg-gray-900 p-6 rounded-lg border">
         @csrf
         @method('PUT')
 
@@ -48,20 +54,25 @@
                        class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
             </div>
         </div>
-
-        <div class="flex items-center justify-between">
-            <form method="POST" action="{{ route('admin.resolveurs.destroy', $user) }}" onsubmit="return confirm('Supprimer ce résolveur ?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="px-4 py-2 rounded-md border border-red-600 text-red-600">
-                    Supprimer
-                </button>
-            </form>
-
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.resolveurs.index') }}" class="px-4 py-2 rounded-md border">Annuler</a>
-                <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white">Mettre à jour</button>
-            </div>
-        </div>
     </form>
+
+    <div class="mt-6 flex items-center justify-between">
+        <form method="POST" action="{{ route('admin.resolveurs.destroy', $user) }}" onsubmit="return confirm('Supprimer ce résolveur ?')" class="inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="px-4 py-2 rounded-md border border-red-600 text-red-600">
+                Supprimer
+            </button>
+        </form>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.resolveurs.index') }}" class="px-4 py-2 rounded-md border">
+                Retour
+            </a>
+            <button type="submit" form="update-form" class="px-4 py-2 rounded-md bg-blue-600 text-white">
+                Mettre à jour
+            </button>
+        </div>
+    </div>
 </div>
 @endsection

@@ -8,73 +8,78 @@ use App\Models\Incident;
 
 class IncidentDatatableController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $requete)
     {
-        $user = Auth::user();
+        $utilisateur = Auth::user();
 
-        if (method_exists($user, 'estResolveur') && $user->estResolveur()) {
-            $q = Incident::query();
-            if ($request->query('assigned') === 'me') {
-                $q->where('attribue_a', $user->id);
-            }
-        } elseif (method_exists($user, 'estUtilisateur') && $user->estUtilisateur()) {
-            $q = $user->incidents(); 
-        } else {
-            $q = Incident::query();
+        $q = Incident::query();
+
+        $statut = $requete->query('statut');
+        if ($statut !== null && $statut !== '') {
+            $q->where('statut', $statut);
         }
 
-        if ($s = $request->query('statut')) {
-            $q->where('statut', $s);
-        }
-        if ($p = $request->query('priority')) {
-            $q->where('priority', $p);
-        }
-        if ($t = $request->query('text')) {
-            $q->where(function ($qq) use ($t) {
-                $qq->where('titre', 'like', '%'.$t.'%')
-                   ->orWhere('public_id', 'like', '%'.$t.'%');
+        $prio = strtolower($requete->query('priority', $requete->query('priorite', '')));
+        if ($prio !== '') {
+            $q->where(function ($qq) use ($prio) {
+                $qq->where('priority', $prio)->orWhere('priorite', $prio);
             });
         }
-        $from = $request->query('from');
-        $to   = $request->query('to');
-        if ($from && $to) {
-            $q->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59']);
-        } elseif ($from) {
-            $q->where('created_at', '>=', $from.' 00:00:00');
-        } elseif ($to) {
-            $q->where('created_at', '<=', $to.' 23:59:59');
+
+        $de = $requete->query('from');
+        $a  = $requete->query('to');
+        if ($de && $a) {
+            $q->whereBetween('created_at', [$de.' 00:00:00', $a.' 23:59:59']);
+        } elseif ($de) {
+            $q->where('created_at', '>=', $de.' 00:00:00');
+        } elseif ($a) {
+            $q->where('created_at', '<=', $a.' 23:59:59');
         }
 
-        $allowedSorts = [
-            'created_at','priority','statut','escalation_level','sla_due_at','public_id','titre'
-        ];
-        $sort = in_array($request->query('sort'), $allowedSorts, true) ? $request->query('sort') : 'created_at';
-        $dir  = $request->query('dir') === 'asc' ? 'asc' : 'desc';
-        $q->orderBy($sort, $dir);
+        $terme = trim((string) $requete->query('q', ''));
+        if ($terme !== '') {
+            $termeSansEspaces = preg_replace('/\s+/', '', $terme);
+            $termeUpper = strtoupper($termeSansEspaces);
+            $chiffres = preg_replace('/\D+/', '', $termeUpper);
+            $idNum = $chiffres !== '' ? (int) ltrim($chiffres, '0') : null;
 
-        $q->with(['utilisateur','gestionnaire']);
+            $q->where(function ($qq) use ($terme, $idNum) {
+                $qq->where('titre', 'like', '%'.$terme.'%')
+                   ->orWhere('description', 'like', '%'.$terme.'%')
+                   ->orWhere('public_id', 'like', '%'.$terme.'%');
+                if ($idNum !== null && $idNum > 0) {
+                    $qq->orWhere('id', $idNum);
+                }
+            });
+        }
 
-        $incidents = $q->paginate(10)->withQueryString();
+        $trisAutorises = ['created_at','priority','priorite','statut','escalation_level','sla_due_at','public_id','titre','id'];
+        $tri = in_array($requete->query('sort'), $trisAutorises, true) ? $requete->query('sort') : 'created_at';
+        $dir = $requete->query('dir') === 'asc' ? 'asc' : 'desc';
+        $q->orderBy($tri, $dir);
 
-        $data = $incidents->getCollection()->map(function (Incident $i) {
+        $q->with(['utilisateur','assignedUser']);
+
+        $parPage = (int) $requete->integer('per_page', 10);
+        if ($parPage < 5) $parPage = 5;
+        if ($parPage > 100) $parPage = 100;
+
+        $incidents = $q->paginate($parPage)->withQueryString();
+
+        $data = $incidents->getCollection()->map(function ($i) {
+            $code = $i->public_id ?? ('INC-'.str_pad($i->id, 4, '0', STR_PAD_LEFT));
+            $prio = strtolower($i->priority ?? $i->priorite ?? '');
+            $sla  = $i->sla_due_at ? (now()->lte($i->sla_due_at) ? 'OK' : 'Breach') : '—';
             return [
-                'id'               => $i->id,
-                'public_id'        => $i->public_id,
-                'titre'            => $i->titre,
-                'statut'           => $i->statut,
-                'priority'         => $i->priority,
-                'escalation_level' => (int) ($i->escalation_level ?? 0),
-                'sla_due_at'       => optional($i->sla_due_at)->format('Y-m-d H:i'),
-                'assigned_to'      => optional($i->gestionnaire)->name,   
-                'created_by'       => optional($i->utilisateur)->name,   
-                'created_at'       => optional($i->created_at)->format('Y-m-d'),
-
-                'urls' => [
-                    'show_resolveur'     => route('resolveur.incidents.show', $i),
-                    'priority_resolveur' => route('resolveur.incidents.priority', $i),
-                    'escalate_resolveur' => route('resolveur.incidents.escalate', $i),
-                    'show_admin'         => route('admin.incidents.show', $i),
-                ],
+                'id' => $i->id,
+                'code' => $code,
+                'titre' => $i->titre,
+                'priorite' => $prio,
+                'statut' => $i->statut,
+                'assigné' => optional($i->assignedUser)->name,
+                'demandeur' => optional($i->utilisateur)->name,
+                'sla' => $sla,
+                'créé' => optional($i->created_at)->format('Y-m-d H:i'),
             ];
         });
 
@@ -82,8 +87,8 @@ class IncidentDatatableController extends Controller
             'data' => $data->values(),
             'meta' => [
                 'current_page' => $incidents->currentPage(),
-                'last_page'    => $incidents->lastPage(),
-                'total'        => $incidents->total(),
+                'last_page' => $incidents->lastPage(),
+                'total' => $incidents->total(),
             ],
         ]);
     }

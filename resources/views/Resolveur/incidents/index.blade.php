@@ -36,7 +36,7 @@
                 <div class="lg:col-span-4">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Priorité</label>
                     @php
-                        $opts = ['' => 'toutes', 'low'=>'low', 'medium'=>'moyenne', 'high'=>'haute', 'critical'=>'critique'];
+                        $opts = ['' => 'toutes', 'low'=>'basse', 'medium'=>'moyenne', 'high'=>'haute', 'critical'=>'critique'];
                         $badge = [
                             ''         => 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-200',
                             'low'      => 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-200',
@@ -63,12 +63,21 @@
                     <input type="hidden" name="priorite"  id="prioriteMirror" value="{{ e($pr) }}">
                 </div>
 
-                <div class="lg:col-span-3 flex items-center gap-2">
+                <div class="lg:col-span-2 flex items-center gap-2">
                     <input type="checkbox" id="assigned" name="assigned" value="me"
                            {{ request('assigned')==='me' ? 'checked' : '' }}
                            class="auto-submit h-4 w-4">
                     <label for="assigned" class="text-sm text-gray-700 dark:text-gray-200">
                         Mes incidents assignés
+                    </label>
+                </div>
+
+                <div class="lg:col-span-2 flex items-center gap-2">
+                    <input type="checkbox" id="reopened" name="reopened" value="1"
+                           {{ request('reopened') ? 'checked' : '' }}
+                           class="auto-submit h-4 w-4">
+                    <label for="reopened" class="text-sm text-gray-700 dark:text-gray-200">
+                        Réouverts uniquement
                     </label>
                 </div>
 
@@ -85,11 +94,9 @@
 
                 <div class="lg:col-span-1">
                     <label class="block text-sm text-gray-600 dark:text-gray-300">Page</label>
-                    <select name="per_page" class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
-                        @foreach([10,15,25,50] as $pp)
-                            <option value="{{ $pp }}" @selected((int)request('per_page',10)===$pp)>{{ $pp }}</option>
-                        @endforeach
-                    </select>
+                    <input type="number" name="per_page" id="per_page" min="1" max="200" step="1"
+                           value="{{ (int)request('per_page',10) }}"
+                           class="per-page-input w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
             </div>
 
@@ -144,7 +151,9 @@
                                 $code  = $i->public_id ?? ('INC-'.str_pad($i->id, 4, '0', STR_PAD_LEFT));
                                 $prio  = strtolower($i->priority ?? $i->priorite ?? '');
                                 $prio  = str_replace(['é','É'],'e',$prio);
-                                $prioLabel = $prio ? ucfirst($prio) : '—';
+                                $prioLabel = [
+                                    'low'=>'Basse','medium'=>'Moyenne','high'=>'Haute','critical'=>'Critique'
+                                ][$prio] ?? '—';
                                 $prioBadge = [
                                     'low'      => 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-200',
                                     'medium'   => 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
@@ -175,7 +184,7 @@
                                     <div class="flex items-center gap-2">
                                         <span>{{ $i->titre ?? \Illuminate\Support\Str::limit($i->description, 80) }}</span>
                                         @if($i->is_reopened)
-                                            <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-500/20 dark:text-red-300">
+                                            <span class="rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
                                                 Réouvert
                                             </span>
                                         @endif
@@ -256,6 +265,20 @@
             if (from){ from.addEventListener('change', ()=> ensureOrderAndSubmit('from')); }
             if (to){   to.addEventListener('change',   ()=> ensureOrderAndSubmit('to'));   }
             syncMinMax();
+
+            const per = document.getElementById('per_page');
+            if (per){
+                const submitPer = debounce(()=>{ 
+                    let v = parseInt(per.value || '10', 10);
+                    if (isNaN(v)) v = 10;
+                    if (v < 1) v = 1;
+                    if (v > 200) v = 200;
+                    per.value = v;
+                    form.submit();
+                }, 350);
+                per.addEventListener('input', submitPer);
+                per.addEventListener('change', submitPer);
+            }
         })();
     </script>
 </x-app-layout>

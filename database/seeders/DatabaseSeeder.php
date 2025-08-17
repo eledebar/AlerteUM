@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\Incident;
 use App\Models\IncidentComment;
@@ -128,7 +127,7 @@ class DatabaseSeeder extends Seeder
                 $incident->save();
             }
 
-            $comment = IncidentComment::create([
+            IncidentComment::create([
                 'incident_id' => $incident->id,
                 'user_id'     => $res->id,
                 'commentaire' => "Prise en charge par {$res->name}.",
@@ -153,7 +152,7 @@ class DatabaseSeeder extends Seeder
 
         for ($i = 1; $i <= 30; $i++) {
             [$titreBase, $cat, $type] = $sujets[$i % count($sujets)];
-            $titre = $titreBase.' #'.str_pad((string)$i, 3, '0', STR_PAD_LEFT);
+            $titre = $titreBase;
             $res = $supports[$i % count($supports)];
             $prio = $priorites[$i % count($priorites)];
             $statut = $i % 9 === 0 ? 'résolu' : ($i % 14 === 0 ? 'fermé' : 'en_cours');
