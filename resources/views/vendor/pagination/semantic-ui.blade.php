@@ -1,7 +1,7 @@
 @if ($paginator->hasPages())
     <div class="ui pagination menu" role="navigation">
         @if ($paginator->onFirstPage())
-            <a class="icon item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')"> <i class="left chevron icon"></i> </a>
+            <a class="icon item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">><span class="sr-only">Action</span> <i class="left chevron icon"></i> </a>
         @else
             <a class="icon item" href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="@lang('pagination.previous')"> <i class="left chevron icon"></i> </a>
         @endif
@@ -25,7 +25,7 @@
         @if ($paginator->hasMorePages())
             <a class="icon item" href="{{ $paginator->nextPageUrl() }}" rel="next" aria-label="@lang('pagination.next')"> <i class="right chevron icon"></i> </a>
         @else
-            <a class="icon item disabled" aria-disabled="true" aria-label="@lang('pagination.next')"> <i class="right chevron icon"></i> </a>
+            <a class="icon item disabled" aria-disabled="true" aria-label="@lang('pagination.next')">><span class="sr-only">Action</span> <i class="right chevron icon"></i> </a>
         @endif
     </div>
 @endif

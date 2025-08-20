@@ -7,22 +7,23 @@
 
     <div class="max-w-7xl mx-auto p-6">
         @if (session('success'))
-            <div class="mb-4 rounded border border-green-300 bg-green-50 px-4 py-3 text-green-800">
+            <div class="mb-4 rounded border border-green-300 bg-green-50 px-4 py-3 text-green-800" role="status" aria-live="polite" aria-atomic="true">
                 {{ session('success') }}
             </div>
         @endif
         @if ($errors->any())
-            <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-red-800">
+            <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-red-800" role="alert" aria-live="assertive" aria-atomic="true">
                 {{ $errors->first() }}
             </div>
         @endif
 
-        <form id="filtersForm" method="GET" class="mb-5 space-y-4">
+        <form id="filtersForm" method="GET" class="mb-5 space-y-4" aria-labelledby="filtersTitle">
+            <h3 id="filtersTitle" class="sr-only">Filtres de la liste des incidents</h3>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
                 <div class="lg:col-span-2">
-                    <label class="block text-sm text-gray-600 dark:text-gray-300">Statut</label>
+                    <label class="block text-sm text-gray-600 dark:text-gray-300" for="statutSelect">Statut</label>
                     @php $st = request('statut'); @endphp
-                    <select name="statut"
+                    <select id="statutSelect" name="statut"
                             class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                         <option value="">Tous</option>
                         <option value="nouveau"  {{ $st==='nouveau'  ? 'selected':'' }}>Nouveau</option>
@@ -46,7 +47,7 @@
                         ];
                         $label = fn($raw) => $raw === 'toutes' ? 'Toutes' : ucfirst($raw);
                     @endphp
-                    <div class="mt-1 flex flex-wrap gap-2">
+                    <div class="mt-1 flex flex-wrap gap-2" role="radiogroup" aria-label="Filtrer par priorité">
                         @foreach($opts as $val => $raw)
                             @php
                                 $active = ($pr===$val) || ($val==='' && $pr==='');
@@ -54,13 +55,16 @@
                             @endphp
                             <button type="button"
                                     class="priority-pill inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $classes }}"
-                                    data-value="{{ $val }}">
+                                    data-value="{{ $val }}"
+                                    role="radio"
+                                    aria-checked="{{ $active ? 'true' : 'false' }}"
+                                    tabindex="{{ $active ? '0' : '-1' }}">
                                 {{ $label($raw) }}
                             </button>
                         @endforeach
                     </div>
-                    <input type="hidden" name="priority"  id="priorityValue"  value="{{ e($pr) }}">
-                    <input type="hidden" name="priorite"  id="prioriteMirror" value="{{ e($pr) }}">
+                    <input type="hidden" name="priority"  id="priorityValue"  value="{{ e($pr) }}" aria-label="priority">
+                    <input type="hidden" name="priorite"  id="prioriteMirror" value="{{ e($pr) }}" aria-label="priorite">
                 </div>
 
                 <div class="lg:col-span-2 flex items-center gap-2">
@@ -82,47 +86,50 @@
                 </div>
 
                 <div class="lg:col-span-1">
-                    <label class="block text-sm text-gray-600 dark:text-gray-300">Du</label>
+                    <label class="block text-sm text-gray-600 dark:text-gray-300" for="from">Du</label>
                     <input type="date" name="from" id="from" value="{{ request('from') }}"
                            class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
                 <div class="lg:col-span-1">
-                    <label class="block text-sm text-gray-600 dark:text-gray-300">Au</label>
+                    <label class="block text-sm text-gray-600 dark:text-gray-300" for="to">Au</label>
                     <input type="date" name="to" id="to" value="{{ request('to') }}"
                            class="auto-submit w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
 
                 <div class="lg:col-span-1">
-                    <label class="block text-sm text-gray-600 dark:text-gray-300">Page</label>
-                    <input type="number" name="per_page" id="per_page" min="1" max="200" step="1"
+                    <label class="block text-sm text-gray-600 dark:text-gray-300" for="per_page">Page</label>
+                    <input aria-label="Éléments par page" type="number" name="per_page" id="per_page" min="1" max="200" step="1"
                            value="{{ (int)request('per_page',10) }}"
                            class="per-page-input w-full rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-                <input type="search" name="q" id="qSearch" value="{{ request('q') }}"
+            <div class="flex flex-wrap items-center gap-3" role="search">
+                <label for="qSearch" id="qSearchLabel" class="sr-only">Rechercher</label>
+                <input type="search" name="q" id="qSearch" aria-labelledby="qSearchLabel" value="{{ request('q') }}"
                        placeholder="🔎 Rechercher titre / code / description…"
                        class="w-full md:flex-1 md:min-w-[280px] rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
 
                 @php $sort = request('sort','prio'); $dir = request('dir','desc'); @endphp
-                <label class="text-sm text-gray-600 dark:text-gray-300">Trier</label>
-                <select name="sort" class="auto-submit rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                <label class="text-sm text-gray-600 dark:text-gray-300" for="sortSelect">Trier</label>
+                <select id="sortSelect" name="sort" class="auto-submit rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <option value="prio" {{ $sort==='prio' ? 'selected':'' }}>Priorité</option>
                     <option value="date" {{ $sort==='date' ? 'selected':'' }}>Date</option>
                 </select>
-                <select name="dir" class="auto-submit rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                <label class="sr-only" for="dirSelect">Ordre</label>
+                <select id="dirSelect" name="dir" class="auto-submit rounded border px-3 py-2 dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <option value="asc"  {{ $dir==='asc' ? 'selected':'' }}>Asc</option>
                     <option value="desc" {{ $dir==='desc'? 'selected':'' }}>Desc</option>
                 </select>
 
-                <a href="{{ url()->current() }}" class="rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2">
+                <a href="{{ url()->current() }}" class="rounded bg-gray-600 hover:bg-gray-700 text-white px-4 py-2" aria-label="Réinitialiser les filtres">
                     Réinitialiser
                 </a>
 
                 @if(Route::has('resolveur.incidents.export.csv'))
                     <a href="{{ route('resolveur.incidents.export.csv', request()->query()) }}"
-                       class="ml-auto inline-flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700">
+                       class="ml-auto inline-flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                       aria-label="Exporter en CSV avec les filtres appliqués">
                         ⬇ Exporter en CSV
                     </a>
                 @endif
@@ -131,18 +138,19 @@
 
         <div class="overflow-hidden rounded border bg-white dark:border-gray-800 dark:bg-gray-900">
             <div class="overflow-x-auto">
-                <table class="min-w-full table-auto text-sm text-gray-900 dark:text-gray-100">
+                <table class="min-w-full table-auto text-sm text-gray-900 dark:text-gray-100" aria-describedby="incidents-caption">
+                    <caption id="incidents-caption" class="sr-only">Liste des incidents à traiter</caption>
                     <thead>
                         <tr class="border-b bg-gray-50 dark:border-gray-800 dark:bg-gray-800/60">
-                            <th class="p-3 text-left font-semibold">Code</th>
-                            <th class="p-3 text-left font-semibold">Titre</th>
-                            <th class="p-3 text-left font-semibold">Priorité</th>
-                            <th class="p-3 text-left font-semibold">Statut</th>
-                            <th class="p-3 text-left font-semibold">SLA</th>
-                            <th class="p-3 text-left font-semibold">Assigné à</th>
-                            <th class="p-3 text-left font-semibold">Créé par</th>
-                            <th class="p-3 text-left font-semibold">Créé</th>
-                            <th class="p-3 text-left font-semibold">Actions</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Code</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Titre</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Priorité</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Statut</th>
+                            <th scope="col" class="p-3 text-left font-semibold">SLA</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Assigné à</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Créé par</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Créé</th>
+                            <th scope="col" class="p-3 text-left font-semibold">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -167,6 +175,7 @@
                                 $hasSla = !empty($i->sla_due_at ?? null);
                                 $isClosedForSla = in_array($statusKey, ['résolu','resolu','fermé','ferme']);
                                 $isFermeStrict = \App\Models\Incident::normalizeStatus($i->statut) === \App\Models\Incident::STATUT_FERME;
+                                $canEdit = ($i->is_reopened) || !$isFermeStrict;
 
                                 $slaTxt = '—'; $slaClass='';
                                 if ($hasSla && !$isClosedForSla) {
@@ -184,7 +193,7 @@
                                     <div class="flex items-center gap-2">
                                         <span>{{ $i->titre ?? \Illuminate\Support\Str::limit($i->description, 80) }}</span>
                                         @if($i->is_reopened)
-                                            <span class="rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
+                                            <span class="rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300" aria-label="Incident réouvert">
                                                 Réouvert
                                             </span>
                                         @endif
@@ -209,12 +218,12 @@
                                 <td class="p-3 align-middle">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('resolveur.incidents.show', $i) }}"
-                                           class="h-8 w-8 transform transition hover:scale-110" title="Voir" aria-label="Voir">
+                                           class="h-8 w-8 transform transition hover:scale-110" title="Voir" aria-label="Voir l’incident {{ $code }}">
                                             <img src="{{ asset('eye.webp') }}" alt="Voir" class="h-full w-full rounded object-contain">
                                         </a>
-                                        @if(!$isFermeStrict)
+                                        @if($canEdit)
                                             <a href="{{ route('resolveur.incidents.edit', $i) }}"
-                                               class="h-8 w-8 transform transition hover:scale-110" title="Éditer" aria-label="Éditer">
+                                               class="h-8 w-8 transform transition hover:scale-110" title="Éditer" aria-label="Éditer l’incident {{ $code }}">
                                                 <img src="{{ asset('edit.webp') }}" alt="Éditer" class="h-full w-full rounded object-contain">
                                             </a>
                                         @endif
@@ -244,12 +253,45 @@
             const q = document.getElementById('qSearch'); if (q) q.addEventListener('input', debounce(()=> form.submit(), 450));
             const priorityValue  = document.getElementById('priorityValue');
             const prioriteMirror = document.getElementById('prioriteMirror');
-            document.querySelectorAll('.priority-pill').forEach(btn=>{
+            const pills = Array.from(document.querySelectorAll('.priority-pill'));
+            function setActivePill(btn){
+                pills.forEach(b=>{
+                    const on = b===btn;
+                    b.setAttribute('aria-checked', on ? 'true' : 'false');
+                    b.tabIndex = on ? 0 : -1;
+                    b.classList.toggle('ring-2', on);
+                    b.classList.toggle('ring-offset-1', on);
+                    b.classList.toggle('ring-blue-500', on);
+                    b.classList.toggle('dark:ring-blue-400', on);
+                });
+            }
+            pills.forEach((btn, idx)=>{
                 btn.addEventListener('click', ()=>{
                     const val = btn.dataset.value || '';
                     priorityValue.value  = val;
                     prioriteMirror.value = val;
+                    setActivePill(btn);
                     form.submit();
+                });
+                btn.addEventListener('keydown', (e)=>{
+                    const key = e.key;
+                    if (key===' ' || key==='Enter'){
+                        e.preventDefault();
+                        btn.click();
+                        return;
+                    }
+                    if (key==='ArrowRight' || key==='ArrowDown'){
+                        e.preventDefault();
+                        const next = pills[(idx+1)%pills.length];
+                        next.focus();
+                        return;
+                    }
+                    if (key==='ArrowLeft' || key==='ArrowUp'){
+                        e.preventDefault();
+                        const prev = pills[(idx-1+pills.length)%pills.length];
+                        prev.focus();
+                        return;
+                    }
                 });
             });
             const from = document.getElementById('from');
@@ -268,7 +310,7 @@
 
             const per = document.getElementById('per_page');
             if (per){
-                const submitPer = debounce(()=>{ 
+                const submitPer = debounce(()=>{
                     let v = parseInt(per.value || '10', 10);
                     if (isNaN(v)) v = 10;
                     if (v < 1) v = 1;

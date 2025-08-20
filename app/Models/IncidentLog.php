@@ -16,11 +16,16 @@ class IncidentLog extends Model
         'from_status',
         'to_status',
         'details',
+        'meta',
+    ];
+
+    protected $casts = [
+        'meta' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $appends = ['human_details'];
-
-    protected static array $userNameCache = [];
 
     public function incident()
     {
@@ -32,31 +37,54 @@ class IncidentLog extends Model
         return $this->belongsTo(User::class);
     }
 
-  
     public function getHumanDetailsAttribute(): string
     {
-        $text = trim((string) ($this->details ?? ''));
+        $a = $this->action ?? '';
+        $from = $this->from_status ? \App\Models\Incident::labelForStatus($this->from_status) : null;
+        $to   = $this->to_status   ? \App\Models\Incident::labelForStatus($this->to_status)   : null;
 
-        if ($text === '' && $this->action === 'status_changed') {
-            $labels = (array) config('itil.labels.status', []);
-            $from = $labels[$this->from_status] ?? $this->from_status ?? '-';
-            $to   = $labels[$this->to_status]   ?? $this->to_status   ?? '-';
-            $text = "Statut: {$from} → {$to}";
+        if ($a === 'status_changed' && $from && $to) {
+            return 'Statut: '.$from.' → '.$to;
         }
 
-        if ($text === '') {
-            return '';
+        if ($a === 'priority_changed') {
+            return $this->details ?: 'Priorité mise à jour';
         }
 
-        $text = preg_replace_callback('/user_id\s*:?\s*(\d+)/i', function ($m) {
-            $uid = (int) $m[1];
-            if (! isset(self::$userNameCache[$uid])) {
-                $user = \App\Models\User::find($uid);
-                self::$userNameCache[$uid] = $user?->name ?? "user_id {$uid}";
+        if ($a === 'escalated') {
+            return $this->details ?: 'Réassignation';
+        }
+
+        if ($a === 'closed_confirmed') {
+            return 'Fermeture confirmée';
+        }
+
+        if ($a === 'close_rejected') {
+            return 'Fermeture rejetée: '.(string) $this->details;
+        }
+
+        if ($a === 'comment') {
+            return (string) $this->details;
+        }
+
+        if ($a === 'created') {
+            return $this->details ?: 'Création de l’incident';
+        }
+
+        if ($a === 'updated') {
+            $changes = $this->meta['changes'] ?? [];
+            if (is_array($changes) && count($changes)) {
+                $parts = [];
+                foreach ($changes as $field => $pair) {
+                    $old = $pair['old'] ?? '';
+                    $new = $pair['new'] ?? '';
+                    $parts[] = $field.": '".$old."' → '".$new."'";
+                }
+                return 'Mise à jour: '.implode(', ', $parts);
             }
-            return self::$userNameCache[$uid];
-        }, $text);
+            return 'Mise à jour';
+        }
 
-        return $text;
+        return $this->details ?: ucfirst($a);
     }
 }

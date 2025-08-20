@@ -51,20 +51,32 @@
                     'color' => 'bg-purple-600'
                 ]
             ];
+            $fondsClairs = ['acces','enseignement'];
         @endphp
 
         @foreach ($categories as $cat)
+            @php
+                $clair = in_array($cat['key'], $fondsClairs, true);
+                $text = $clair ? 'text-gray-900' : 'text-white';
+                $muted = $clair ? 'text-gray-800/90' : 'text-white/90';
+                $chip = $clair ? 'bg-black/10 text-gray-900 ring-1 ring-black/10' : 'bg-white/20 text-white';
+                $focusRing = $clair ? 'focus-visible:ring-black/30' : 'focus-visible:ring-white/60';
+                $focusOffset = $clair ? 'focus-visible:ring-offset-white' : 'focus-visible:ring-offset-black';
+                $titleId = 'title-'.$cat['key'];
+                $descId = 'desc-'.$cat['key'];
+            @endphp
+
             <a href="{{ route('utilisateur.incidents.create', ['categorie' => $cat['key']]) }}"
-               class="rounded-xl shadow-lg transition hover:scale-[1.02] hover:shadow-xl p-6 {{ $cat['color'] }} text-white flex flex-col space-y-3">
+               class="rounded-xl shadow-lg transition hover:scale-[1.02] hover:shadow-xl p-6 {{ $cat['color'] }} {{ $text }} flex flex-col space-y-3 focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 {{ $focusRing }} {{ $focusOffset }}"
+               aria-labelledby="{{ $titleId }}" aria-describedby="{{ $descId }}">
                 <div class="flex items-center space-x-3">
-                    <img src="{{ asset($cat['key'] . '.webp') }}"
-                         alt="{{ $cat['title'] }}" class="w-10 h-10 object-contain">
-                    <h3 class="text-lg font-bold">{{ $cat['title'] }}</h3>
+                    <img src="{{ asset($cat['key'] . '.webp') }}" alt="" class="w-10 h-10 object-contain">
+                    <h3 id="{{ $titleId }}" class="text-lg font-bold">{{ $cat['title'] }}</h3>
                 </div>
-                <p class="text-sm text-white/90">{{ $cat['desc'] }}</p>
+                <p id="{{ $descId }}" class="text-sm {{ $muted }}">{{ $cat['desc'] }}</p>
                 <div class="space-y-1 mt-1">
                     @foreach ($cat['types'] as $type)
-                        <span class="text-xs bg-white/20 px-2 py-0.5 rounded inline-block">
+                        <span class="text-xs px-2 py-0.5 rounded inline-block {{ $chip }}">
                             {{ $type }}
                         </span>
                     @endforeach

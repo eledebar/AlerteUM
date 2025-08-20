@@ -17,10 +17,12 @@ class AdminDashboardController extends Controller
         $from = $this->parseDate($request->input('from'));
         $to = $this->parseDate($request->input('to'), true);
 
+        $colRes = $this->colonneResolveur();
+
         $q = Incident::query();
 
-        if ($resolveurId) {
-            $q->where('resolveur_id', $resolveurId);
+        if ($resolveurId && $colRes) {
+            $q->where($colRes, $resolveurId);
         }
         if ($from) {
             $q->where('created_at', '>=', $from);
@@ -65,10 +67,14 @@ class AdminDashboardController extends Controller
         if (!$v) return null;
         try {
             $d = Carbon::createFromFormat('Y-m-d', $v);
-            return $endOfDay ? $d->copy()->endOfDay() : $d->startOfDay();
         } catch (\Throwable $e) {
-            return null;
+            try {
+                $d = Carbon::createFromFormat('d/m/Y', $v);
+            } catch (\Throwable $e2) {
+                return null;
+            }
         }
+        return $endOfDay ? $d->copy()->endOfDay() : $d->startOfDay();
     }
 
     protected function groupByCategorie($q)
@@ -82,5 +88,15 @@ class AdminDashboardController extends Controller
                      ->groupBy('type')->orderBy('type')->get();
         }
         return collect();
+    }
+
+    protected function colonneResolveur(): ?string
+    {
+        $cols = Schema::getColumnListing('incidents');
+        $candidats = ['attribue_a','resolveur_id','resolver_id','assigned_to','assign_to'];
+        foreach ($candidats as $c) {
+            if (in_array($c, $cols, true)) return $c;
+        }
+        return null;
     }
 }

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AdminResolveurController;
 
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AvatarController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -73,6 +74,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->whereNumber('incident')->name('incidents.confirmClose');
         Route::post('/incidents/{incident}/reject-close', [UserIncidentController::class, 'rejectClose'])
             ->whereNumber('incident')->name('incidents.rejectClose');
+
+        Route::get('/incidents/{incident}/logs/export.csv', [ExportController::class, 'incidentLogsCsv'])
+            ->whereNumber('incident')->name('incidents.logs.export.csv');
     });
 
     Route::prefix('resolveur')->as('resolveur.')->middleware('role:resolveur')->group(function () {
@@ -105,6 +109,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/incidents/{incident}/priority', [ResolveurIncidentController::class, 'setPriority'])->whereNumber('incident')->name('incidents.priority');
         Route::post('/incidents/{incident}/escalate', [ResolveurIncidentController::class, 'escalate'])->whereNumber('incident')->name('incidents.escalate');
+
+        Route::get('/incidents/{incident}/logs/export.csv', [ExportController::class, 'incidentLogsCsv'])
+            ->whereNumber('incident')->name('incidents.logs.export.csv');
     });
 
     Route::prefix('admin')->as('admin.')->middleware('role:admin')->group(function () {
@@ -125,9 +132,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/incidents/export.csv', [ExportController::class, 'incidentsCsv'])->name('incidents.export');
         Route::get('/incidents/export-admin.csv', [ExportController::class, 'incidentsCsv'])->name('incidents.export.csv');
+
+        Route::get('/incidents/{incident}/logs/export.csv', [ExportController::class, 'incidentLogsCsv'])
+            ->whereNumber('incident')->name('incidents.logs.export.csv');
     });
 });
-
 
 Route::get('/media/avatar/{user}', [AvatarController::class, 'show'])
     ->name('avatars.show')

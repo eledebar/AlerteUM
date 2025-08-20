@@ -120,39 +120,36 @@
                                     </svg>
                                 </div>
                                 <div class="pt-0.5">
-                                    <h3 class="font-semibold text-amber-900 dark:text-amber-100">Le ticket est-il vraiment résolu ?</h3>
-                                    <p class="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">Confirmez si tout fonctionne. Vous pouvez aussi réouvrir en nous expliquant le problème.</p>
+                                    <h3 class="font-semibold text-amber-900 dark:text-amber-100">Valider la résolution</h3>
+                                    <p class="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">Confirmez si tout fonctionne ou rouvrez le ticket.</p>
                                 </div>
                             </header>
 
                             <div class="px-5 pb-5 pt-4 space-y-3">
                                 <form method="POST" action="{{ route('utilisateur.incidents.confirmClose', $incident) }}">
                                     @csrf
-                                    <button type="submit" class="w-full group relative overflow-hidden rounded-xl px-4 py-3 bg-emerald-600 text-white font-medium shadow-sm ring-1 ring-inset ring-emerald-500/50 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition">
-                                        <span class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-white transition"></span>
-                                        <span class="inline-flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                                            </svg>
-                                            Oui, fermer définitivement
-                                        </span>
+                                    <button type="submit" class="w-full whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm bg-emerald-600 text-white font-medium shadow-sm ring-1 ring-inset ring-emerald-500/50 hover:bg-emerald-500 focus:focus-visible:outline-2 focus-visible:outline-offset-2 focus:ring-2 focus:ring-emerald-400 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                        </svg>
+                                        Fermer définitivement
                                     </button>
                                 </form>
 
-                                <details class="rounded-xl border border-rose-300/70 bg-white/60 dark:bg-gray-900/60 dark:border-rose-700/50 open:ring-1 open:ring-rose-400/30">
-                                    <summary class="list-none cursor-pointer rounded-t-xl px-4 py-3 bg-rose-600 text-white font-medium hover:bg-rose-500 transition">
-                                        <span class="inline-flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <details class="rounded-xl border border-rose-300/70 bg-white/60 dark:bg-gray-900/60 dark:border-rose-700/50">
+                                    <summary class="list-none">
+                                        <div class="w-full whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-t-xl px-4 py-2.5 text-sm bg-rose-600 text-white font-medium hover:bg-rose-500 transition cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                                             </svg>
-                                            Non, le problème persiste
-                                        </span>
+                                            Rouvrir le ticket
+                                        </div>
                                     </summary>
                                     <form method="POST" action="{{ route('utilisateur.incidents.rejectClose', $incident) }}" class="p-4 space-y-3">
                                         @csrf
-                                        <label for="reason" class="text-sm text-gray-700 dark:text-gray-300">Expliquez brièvement ce qui ne fonctionne pas :</label>
-                                        <textarea id="reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
-                                        <button class="w-full rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400 transition">
+                                        <label for="reason" class="text-sm text-gray-700 dark:text-gray-300">Expliquez brièvement le problème</label>
+                                        <textarea id="reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-800 focus:focus-visible:outline-2 focus-visible:outline-offset-2 focus:ring-2 focus:ring-rose-400"></textarea>
+                                        <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500 focus:focus-visible:outline-2 focus-visible:outline-offset-2 focus:ring-2 focus:ring-rose-400 transition">
                                             Envoyer et rouvrir
                                         </button>
                                     </form>

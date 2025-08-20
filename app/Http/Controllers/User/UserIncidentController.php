@@ -217,6 +217,13 @@ class UserIncidentController extends Controller
             'utilisateur_id' => Auth::id(),
         ]);
 
+        IncidentLog::create([
+            'incident_id' => $incident->id,
+            'user_id'     => Auth::id(),
+            'action'      => 'created',
+            'details'     => 'Création de l’incident',
+        ]);
+
         $request->user()->notify(new IncidentCreated($incident));
 
         return redirect()->route('utilisateur.incidents.show', $incident)->with('success', 'Incident créé avec succès.');
@@ -246,10 +253,29 @@ class UserIncidentController extends Controller
             'description' => 'required|string',
         ]);
 
+        $avant = $incident->only(['titre','description']);
+
         $incident->update([
             'titre'       => $request->titre,
             'description' => $request->description,
         ]);
+
+        $apres = $incident->only(['titre','description']);
+        $modifs = [];
+        foreach ($apres as $k => $v) {
+            $old = $avant[$k] ?? null;
+            if ($old !== $v) {
+                $modifs[$k] = ['old' => (string) $old, 'new' => (string) $v];
+            }
+        }
+        if (count($modifs)) {
+            IncidentLog::create([
+                'incident_id' => $incident->id,
+                'user_id'     => Auth::id(),
+                'action'      => 'updated',
+                'meta'        => ['changes' => $modifs],
+            ]);
+        }
 
         return redirect()->route('utilisateur.incidents.index')->with('success', 'Incident mis à jour avec succès.');
     }
